@@ -7,7 +7,7 @@ python-multipart    # Required for handling image/video file uploads in FastAPI
 python-dotenv       # For loading your API keys from a .env file
 
 # AI & Media APIs
-google-generativeai # For Person 2's Gemini Multimodal RAG
+google-genai # For Gemini Multimodal RAG
 cloudinary          # For Person 3's visual compositing
 elevenlabs          # For your voiceover integration
 requests            # Standard library for any webhook/API fallbacks
