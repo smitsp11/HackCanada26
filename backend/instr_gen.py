@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# TODO: Hardcode image mapping for step by step visuals (pre-generate the images for the hardcoded demo)
+
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def generate_ikea_steps(diagnosis: dict, manual_path: str) -> dict:
