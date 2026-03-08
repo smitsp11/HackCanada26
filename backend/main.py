@@ -6,7 +6,6 @@ Handles the full diagnostic pipeline:
   3. /api/repair       — Confirm fault → Gemini repair steps grounded in manual
   4. /api/visual-assist — Upload step image → Cloudinary overlay
 """
-
 import os
 import json
 import tempfile
@@ -14,12 +13,18 @@ import httpx
 
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.concurrency import run_in_threadpool 
+
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import time
 from google import genai
 from instr_gen import generate_ikea_steps
 from cloudinary_upload import process_media
+
+# NEW: Import your voice generator!
+from voice_gen import generate_step_audio 
 
 load_dotenv()
 
@@ -38,7 +43,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+# NEW: Serve the audio files so the Next.js frontend can access them via URL
+# This will create the folder if it doesn't exist yet so FastAPI doesn't crash on boot
+os.makedirs("assets/audio/steps", exist_ok=True)
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -195,13 +203,39 @@ class RepairRequest(BaseModel):
     diagnosis: dict
     probing_answer: str
 
-
 @app.post("/api/repair")
 async def get_repair_steps(request: RepairRequest):
+    """
+    Generates instructions based on triage, then generates voiceovers for each step.
+    """
+    # 1. Generate the IKEA-style instructions using Gemini
+    # Uses the provided manual PDF path defined in MEDIA_PATH
     result = generate_ikea_steps(request.diagnosis, MANUAL_PATH)
-    return {"status": "success", "repair": result}
+    
+    if "error" in result:
+        return {"status": "error", "message": result["error"]}
 
-
+    steps_list = result.get("repair_steps", [])
+    
+    # 2. Generate ElevenLabs audio in a background thread to keep the server responsive
+    # This calls your cleaned up voice_gen module
+    audio_map = await run_in_threadpool(generate_step_audio, steps_list)
+    
+    # 3. Inject the live audio URLs into the instructions
+    for step in steps_list:
+        step_num = step.get("step")
+        if step_num in audio_map:
+            # Construct the absolute URL for the frontend to play
+            step["audio_url"] = f"http://localhost:8000{audio_map[step_num]}"
+            
+    # 4. Return the fully enriched instruction set to the client
+    return {
+        "status": "success", 
+        "repair": {
+            "page": result.get("page"),
+            "repair_steps": steps_list
+        }
+    }
 # ── Route 4: Visual Assist (overlay) ─────────────────────────────────────────
 
 @app.post("/api/visual-assist")
