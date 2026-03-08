@@ -1,6 +1,6 @@
 import os
-import httpx 
-from elevenlabs.client import ElevenLabs
+import time
+import requests 
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -9,23 +9,18 @@ api_key = os.getenv("ELEVENLABS_API_KEY")
 if not api_key:
     raise ValueError("FATAL: ELEVENLABS_API_KEY is missing from .env")
 
-# 1. Initialize with a 15-second timeout for hackathon network safety
-client = ElevenLabs(
-    api_key=api_key,
-    httpx_client=httpx.Client(timeout=15.0) 
-)
-
 def generate_step_audio(steps_data: list, output_dir: str = "assets/audio/steps"):
-    """
-    Generates an MP3 for each repair step.
-    FRONTEND LINK: The API will return the local paths to these MP3s. 
-    The frontend should pre-load them and use the Web Speech API to listen 
-    for the word "Next" to trigger the next file in the sequence.
-    """
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
 
     audio_map = {}
+    url = "https://api.elevenlabs.io/v1/text-to-speech/nPczCjzI2devNBz1zQrb/stream"
+    
+    headers = {
+        "Accept": "audio/mpeg",
+        "Content-Type": "application/json",
+        "xi-api-key": api_key
+    }
 
     for item in steps_data:
         step_num = item.get("step")
@@ -36,39 +31,58 @@ def generate_step_audio(steps_data: list, output_dir: str = "assets/audio/steps"
         if caution and caution.lower() != "none":
             script += f"Caution: {caution}"
 
-        print(f"Generating audio for Step {step_num}...")
+        print(f"\n--- Processing Step {step_num} ---")
+
+        data = {
+            "text": script,
+            "model_id": "eleven_multilingual_v2",
+            "output_format": "mp3_44100_128",
+            "voice_settings": {
+                "stability": 0.5,
+                "similarity_boost": 0.5
+            }
+        }
 
         try:
-            audio_stream = client.text_to_speech.convert(
-                text=script,
-                voice_id="nPczCjzI2devNBz1zQrb", # Brian
-                model_id="eleven_multilingual_v2",
-                output_format="mp3_44100_128"
-            )
+            print(f"[DEBUG] Sending request to ElevenLabs...")
             
+            # INCREASED TIMEOUTS: 10s to connect, 30s to download the audio
+            response = requests.post(url, json=data, headers=headers, timeout=(10.0, 30.0))
+            
+            print(f"[DEBUG] HTTP Status Code Received: {response.status_code}")
+            
+            if response.status_code != 200:
+                print(f"\n[FATAL API ERROR] ElevenLabs rejected the request:\n{response.text}\n")
+                print("ABORTING REMAINING STEPS.")
+                break 
+
             file_name = f"step_{step_num}.mp3"
             file_path = os.path.join(output_dir, file_name)
             
             with open(file_path, "wb") as f:
-                for chunk in audio_stream:
+                for chunk in response.iter_content(chunk_size=1024):
                     if chunk:
                         f.write(chunk)
             
+            print(f"[SUCCESS] Saved to {file_path}")
             audio_map[step_num] = f"/{file_path}" 
             
-        except httpx.TimeoutException:
-            print(f"[ERROR] Step {step_num} failed: Network timeout.")
+            # THE HUMAN PACING
+            # Wait 12 seconds so ElevenLabs thinks a user is reading the step
+            if step_num != len(steps_data): # Don't sleep after the very last step
+                print("[DEBUG] Sleeping for 12 seconds to mimic human reading pace...")
+                time.sleep(12)
+            
+        except requests.exceptions.ReadTimeout:
+            print(f"[NETWORK ERROR] Read Timeout. ElevenLabs took longer than 30 seconds to generate the file.")
         except Exception as e:
             print(f"[ERROR] Step {step_num} failed: {e}")
 
     return audio_map
 
 if __name__ == "__main__":
-    # --- FRONTEND / INTEGRATION COMMENTS ---
-    # REPLACE THIS MOCK DATA when integrating. 
-    # In production, `mock_steps` will be replaced by the output of `generate_ikea_steps()` 
-    # from your instr_gen.py file. See main.py for the actual implementation.
     mock_steps = [
-        {"step": 1, "action": "Turn off power.", "caution": "High voltage."}
+        {"step": 1, "action": "Turn off power.", "caution": "High voltage."},
+        {"step": 2, "action": "Remove the panel.", "caution": "None"}
     ]
     generate_step_audio(mock_steps)
