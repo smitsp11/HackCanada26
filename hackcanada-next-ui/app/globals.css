@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --color-studio: #ededed;
-  --color-black: #000000;
+  --color-studio: #f4f4f5;
+  --color-black: #09090b;
   --color-white: #ffffff;
+  --color-brand: #004DFF;
 }
 
 * {
@@ -16,15 +17,16 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background-color: #fafafa;
+  /* Thicker 2px lines, slightly darker opacity for contrast */
   background-image:
-    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
-  background-size: 32px 32px;
-  color: #000000;
+    linear-gradient(to right, rgba(0, 0, 0, 0.06) 2px, transparent 2px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.06) 2px, transparent 2px);
+  /* Larger 48px grid cells */
+  background-size: 48px 48px;
+  color: var(--color-black);
   font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  animation: grid-scroll 20s linear infinite;
 }
 
 @keyframes grid-scroll {
@@ -32,7 +34,7 @@ body {
     background-position: 0 0;
   }
   100% {
-    background-position: 32px 32px;
+    background-position: 36px 36px;
   }
 }
 
@@ -42,8 +44,8 @@ body {
 }
 
 ::selection {
-  background-color: #000000;
-  color: #ededed;
+  background-color: var(--color-brand);
+  color: var(--color-white);
 }
 
 input,

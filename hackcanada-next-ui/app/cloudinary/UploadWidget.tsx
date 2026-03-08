@@ -19,6 +19,7 @@ interface UploadWidgetProps {
   onUploadSuccess?: (result: CloudinaryUploadResult) => void;
   onUploadError?: (error: Error) => void;
   multiple?: boolean;
+  defaultSource?: "local" | "camera" | "url";
   children?: (props: { open: () => void; isReady: boolean }) => ReactNode;
 }
 
@@ -49,6 +50,7 @@ export function UploadWidget({
   onUploadSuccess,
   onUploadError,
   multiple = false,
+  defaultSource, 
   children,
 }: UploadWidgetProps) {
   const widgetRef = useRef<{ open: () => void } | null>(null);
@@ -73,7 +75,32 @@ export function UploadWidget({
           cloudName,
           uploadPreset: uploadPreset || undefined,
           sources: ["local", "camera", "url"],
+          defaultSource: defaultSource,
           multiple,
+          styles: {
+            palette: {
+              window: "#ffffff",
+              windowBorder: "#09090b",
+              tabIcon: "#09090b",
+              menuIcons: "#09090b",
+              textDark: "#09090b",
+              textLight: "#ffffff",
+              link: "#004DFF",     // Electric Cobalt
+              action: "#09090b",
+              inactiveTabIcon: "#a1a1aa",
+              error: "#ef4444",
+              inProgress: "#004DFF", // Electric Cobalt
+              complete: "#22c55e",
+              sourceBg: "#f4f4f5"  // Studio background
+            },
+            fonts: {
+              default: null,
+              "sans-serif": {
+                url: null,
+                active: true
+              }
+            }
+          }
         },
         (error: CloudinaryWidgetError | null, result: CloudinaryWidgetResult | null) => {
           if (error) {
@@ -102,7 +129,7 @@ export function UploadWidget({
         if (timeout) clearTimeout(timeout);
         initializeWidget();
       }
-    }, 100);
+    }, 500);
 
     timeout = setTimeout(() => {
       if (poll) clearInterval(poll);
@@ -122,7 +149,7 @@ export function UploadWidget({
       if (poll) clearInterval(poll);
       if (timeout) clearTimeout(timeout);
     };
-  }, [hasConfig, multiple, onUploadError, onUploadSuccess]);
+  }, [hasConfig, multiple, defaultSource, onUploadError, onUploadSuccess]);
 
   const handleOpen = () => {
     if (openWidget) {
@@ -155,9 +182,9 @@ export function UploadWidget({
       type="button"
       onClick={handleOpen}
       disabled={!isReady}
-      className="px-5 py-2.5 text-xs font-mono uppercase tracking-widest bg-black text-white border border-black cursor-pointer disabled:opacity-40 disabled:cursor-wait hover:bg-white hover:text-black transition-none"
+      className="px-6 py-3 text-xs font-bold font-mono uppercase tracking-[0.2em] bg-black text-white border-2 border-black cursor-pointer disabled:opacity-40 disabled:cursor-wait hover:bg-brand hover:border-brand transition-colors duration-200"
     >
-      {isReady ? "UPLOAD" : "LOADING"}
+      {isReady ? "Initialize Upload" : "Loading Module"}
     </button>
   );
 }
