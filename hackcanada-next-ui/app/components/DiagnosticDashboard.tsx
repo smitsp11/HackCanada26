@@ -62,7 +62,15 @@ export function DiagnosticDashboard({ assets, mockDiagnosis, mockSteps }: Diagno
         method: "POST",
         body: formData,
       });
-      const processData = (await processRes.json()) as ProcessApiResponse;
+      const text = await processRes.text();
+      let processData: ProcessApiResponse;
+      try {
+        processData = (text ? JSON.parse(text) : {}) as ProcessApiResponse;
+      } catch {
+        throw new Error(
+          "Received invalid response from process service. Check that your backend is deployed and PROCESS_API_URL is set correctly in Vercel."
+        );
+      }
 
       if (!processRes.ok) {
         throw new Error(processData.error || "Process request failed");

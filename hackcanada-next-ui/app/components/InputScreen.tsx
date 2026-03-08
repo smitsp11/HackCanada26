@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { UploadWidget, type CloudinaryUploadResult } from "../cloudinary/UploadWidget";
 
 type SlotKey = "model" | "additional" | "video";
@@ -19,7 +19,7 @@ export function InputScreen({ setAssets, onExecute }: any) {
     video: null,
   });
 
-  const syncAssets = (current: Record<SlotKey, CloudinaryUploadResult | null>) => {
+  const syncAssets = useCallback((current: Record<SlotKey, CloudinaryUploadResult | null>) => {
     const built = Object.entries(current)
       .filter(([, v]) => v !== null)
       .map(([key, v], i) => ({
@@ -30,13 +30,15 @@ export function InputScreen({ setAssets, onExecute }: any) {
         figure: i + 1,
       }));
     setAssets(built);
-  };
+  }, [setAssets]);
 
-  const handleSlotUpload = (slotKey: SlotKey) => (result: CloudinaryUploadResult) => {
-    const next = { ...slots, [slotKey]: result };
-    setSlots(next);
-    syncAssets(next);
-  };
+  const handleSlotUpload = useCallback((slotKey: SlotKey) => (result: CloudinaryUploadResult) => {
+    setSlots((prev) => {
+      const next = { ...prev, [slotKey]: result };
+      syncAssets(next);
+      return next;
+    });
+  }, [syncAssets]);
 
   const removeSlot = (slotKey: SlotKey) => {
     const next = { ...slots, [slotKey]: null };
