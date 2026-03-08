@@ -3,12 +3,89 @@
 import { useState } from "react";
 import { UploadWidget, type CloudinaryUploadResult } from "../cloudinary/UploadWidget";
 
-export function DiagnosticDashboard({ assets, mockDiagnosis, mockSteps }: any) {
-  const [currentStep, setCurrentStep] = useState(0);
-  const activeStepData = mockSteps[currentStep];
+type Diagnosis = {
+  equipment: string;
+  fault: string;
+};
 
-  const handleStuckUpload = (result: CloudinaryUploadResult) => {
-    alert(`Evidence mounted for Step ${currentStep + 1}. Analyzing workspace...`);
+type StepData = {
+  step: number;
+  action: string;
+  caution: string;
+  image_url: string;
+};
+
+type ProcessApiResponse = {
+  annotatedUrl?: string | null;
+  error?: string;
+};
+
+interface DiagnosticDashboardProps {
+  assets: unknown[];
+  mockDiagnosis: Diagnosis;
+  mockSteps: StepData[];
+}
+
+export function DiagnosticDashboard({ assets, mockDiagnosis, mockSteps }: DiagnosticDashboardProps) {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [annotatedByStep, setAnnotatedByStep] = useState<Record<number, string>>({});
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const activeStepData = mockSteps[currentStep];
+  const activeImageUrl = annotatedByStep[currentStep] || activeStepData.image_url;
+
+  const handleStuckUpload = async (result: CloudinaryUploadResult) => {
+    setIsProcessing(true);
+    setErrorMessage("");
+    setStatusMessage(`Analyzing evidence for Step ${currentStep + 1}...`);
+
+    try {
+      const stepPayload = {
+        step: activeStepData.step,
+        category: "component",
+        action: activeStepData.action,
+        caution: activeStepData.caution,
+        visual_description: activeStepData.action,
+      };
+
+      const processRes = await fetch("/api/process", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          step: stepPayload,
+          upload: {
+            publicId: result.public_id,
+            secureUrl: result.secure_url,
+            width: result.width,
+            height: result.height,
+            format: result.format,
+          },
+        }),
+      });
+      const processData = (await processRes.json()) as ProcessApiResponse;
+
+      if (!processRes.ok) {
+        throw new Error(processData.error || "Process request failed");
+      }
+
+      if (!processData.annotatedUrl) {
+        throw new Error("No annotation returned for this image");
+      }
+
+      setAnnotatedByStep((prev) => ({
+        ...prev,
+        [currentStep]: processData.annotatedUrl as string,
+      }));
+      setStatusMessage(`Annotation ready for Step ${currentStep + 1}.`);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unknown process error");
+      setStatusMessage("");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -47,11 +124,21 @@ export function DiagnosticDashboard({ assets, mockDiagnosis, mockSteps }: any) {
           {/* Constrained Image Height so it always fits */}
           <div className="w-full bg-studio border-2 border-black h-48 sm:h-64 flex items-center justify-center p-2 relative">
             <img 
-              src={activeStepData.image_url} 
+              src={activeImageUrl}
               alt={`Step ${activeStepData.step}`} 
               className="w-full h-full object-contain mix-blend-multiply" 
             />
           </div>
+          {statusMessage ? (
+            <p className="font-mono text-[10px] uppercase tracking-widest text-black/60">
+              {statusMessage}
+            </p>
+          ) : null}
+          {errorMessage ? (
+            <p className="font-mono text-[10px] uppercase tracking-widest text-brand">
+              {errorMessage}
+            </p>
+          ) : null}
           
           {/* Shrunk the font sizes down */}
           <div className="flex flex-col gap-3 max-w-4xl">
@@ -74,8 +161,8 @@ export function DiagnosticDashboard({ assets, mockDiagnosis, mockSteps }: any) {
           </div>
           <UploadWidget onUploadSuccess={handleStuckUpload} defaultSource="camera">
             {({ open, isReady }) => (
-              <button onClick={open} disabled={!isReady} className="w-full sm:w-auto py-4 px-8 font-mono text-xs font-bold tracking-[0.2em] uppercase bg-black text-white hover:bg-brand transition-colors flex items-center justify-center gap-3">
-                <span>I'm Stuck</span>
+              <button onClick={open} disabled={!isReady || isProcessing} className="w-full sm:w-auto py-4 px-8 font-mono text-xs font-bold tracking-[0.2em] uppercase bg-black text-white hover:bg-brand transition-colors flex items-center justify-center gap-3 disabled:opacity-40">
+                <span>{isProcessing ? "Processing..." : "I'm Stuck"}</span>
               </button>
             )}
           </UploadWidget>
