@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { UploadWidget, type CloudinaryUploadResult } from "../cloudinary/UploadWidget";
+import { useRef, useState } from "react";
 
 type Diagnosis = {
   equipment: string;
@@ -32,10 +31,16 @@ export function DiagnosticDashboard({ assets, mockDiagnosis, mockSteps }: Diagno
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const activeStepData = mockSteps[currentStep];
   const activeImageUrl = annotatedByStep[currentStep] || activeStepData.image_url;
 
-  const handleStuckUpload = async (result: CloudinaryUploadResult) => {
+  const handleStuckFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    e.target.value = "";
+
     setIsProcessing(true);
     setErrorMessage("");
     setStatusMessage(`Analyzing evidence for Step ${currentStep + 1}...`);
@@ -49,21 +54,13 @@ export function DiagnosticDashboard({ assets, mockDiagnosis, mockSteps }: Diagno
         visual_description: activeStepData.action,
       };
 
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("step", JSON.stringify(stepPayload));
+
       const processRes = await fetch("/api/process", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          step: stepPayload,
-          upload: {
-            publicId: result.public_id,
-            secureUrl: result.secure_url,
-            width: result.width,
-            height: result.height,
-            format: result.format,
-          },
-        }),
+        body: formData,
       });
       const processData = (await processRes.json()) as ProcessApiResponse;
 
@@ -159,13 +156,21 @@ export function DiagnosticDashboard({ assets, mockDiagnosis, mockSteps }: Diagno
             <button onClick={() => setCurrentStep(prev => Math.max(0, prev - 1))} disabled={currentStep === 0} className="flex-1 py-4 px-6 font-mono text-xs font-bold tracking-[0.2em] uppercase border-r-2 border-black disabled:opacity-30 hover:bg-black hover:text-white transition-colors">&larr; Previous</button>
             <button onClick={() => setCurrentStep(prev => Math.min(mockSteps.length - 1, prev + 1))} disabled={currentStep === mockSteps.length - 1} className="flex-1 py-4 px-6 font-mono text-xs font-bold tracking-[0.2em] uppercase disabled:opacity-30 hover:bg-brand hover:text-white transition-colors">Next Step &rarr;</button>
           </div>
-          <UploadWidget onUploadSuccess={handleStuckUpload} defaultSource="camera">
-            {({ open, isReady }) => (
-              <button onClick={open} disabled={!isReady || isProcessing} className="w-full sm:w-auto py-4 px-8 font-mono text-xs font-bold tracking-[0.2em] uppercase bg-black text-white hover:bg-brand transition-colors flex items-center justify-center gap-3 disabled:opacity-40">
-                <span>{isProcessing ? "Processing..." : "I'm Stuck"}</span>
-              </button>
-            )}
-          </UploadWidget>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleStuckFile}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isProcessing}
+            className="w-full sm:w-auto py-4 px-8 font-mono text-xs font-bold tracking-[0.2em] uppercase bg-black text-white hover:bg-brand transition-colors flex items-center justify-center gap-3 disabled:opacity-40"
+          >
+            <span>{isProcessing ? "Processing..." : "I'm Stuck"}</span>
+          </button>
         </div>
       </section>
     </main>
