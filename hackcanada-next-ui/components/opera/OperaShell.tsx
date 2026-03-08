@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useOperaReducer } from "@/hooks/useOperaReducer";
 import { useSSE } from "@/hooks/useSSE";
-import { getOperaTestState } from "@/lib/test-fixtures";
 import Phase1Ingestion from "./Phase1Ingestion";
 import TransitionCut from "./TransitionCut";
 import Phase2Cognitive from "./Phase2Cognitive";
@@ -12,87 +11,74 @@ import Phase3Synthesis from "./Phase3Synthesis";
 import ResultPane from "./ResultPane";
 
 interface OperaShellProps {
-  testStateKey?: string | null;
+  assetUrls: [string, string, string, string];
+  symptom: string;
 }
 
-export default function OperaShell({ testStateKey }: OperaShellProps) {
+export default function OperaShell({ assetUrls, symptom }: OperaShellProps) {
   const [state, dispatch] = useOperaReducer();
   const [sseEnabled, setSSEEnabled] = useState(false);
-  const testState = getOperaTestState(testStateKey);
-  const viewState = testState ?? state;
+  const started = useRef(false);
 
   useSSE({
-    url: "/api/diagnose",
-    enabled: sseEnabled && !testState,
+    url: "/api/diagnose?urls=" + encodeURIComponent(JSON.stringify(assetUrls)),
+    enabled: sseEnabled,
     dispatch,
   });
 
-  const handleStart = useCallback(() => {
-    if (testState) return;
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
     dispatch({ type: "UPLOAD_COMPLETE" });
     setSSEEnabled(true);
-  }, [dispatch, testState]);
-
-  // Listen for postMessage from another page to trigger the animation
-  useEffect(() => {
-    const handler = (event: MessageEvent) => {
-      if (event.data?.type === "OPERA_START") {
-        handleStart();
-      }
-    };
-    window.addEventListener("message", handler);
-    return () => window.removeEventListener("message", handler);
-  }, [handleStart]);
+  }, [dispatch]);
 
   const handleCutComplete = useCallback(() => {
-    if (testState) return;
     dispatch({ type: "CUT_COMPLETE" });
-  }, [dispatch, testState]);
+  }, [dispatch]);
 
   return (
     <div className="relative min-h-screen w-full">
       <AnimatePresence mode="wait">
-        {viewState.phase === "PHASE_1_INGESTION" && (
+        {state.phase === "PHASE_1_INGESTION" && (
           <Phase1Ingestion
             key="phase1"
-            slots={viewState.slots}
-            slotUrls={viewState.slotUrls}
-            logs={viewState.diagnosticLogs}
+            slots={state.slots}
+            slotUrls={state.slotUrls}
+            logs={state.diagnosticLogs}
           />
         )}
 
-        {viewState.phase === "PHASE_2_COGNITIVE" && (
+        {state.phase === "PHASE_2_COGNITIVE" && (
           <Phase2Cognitive
             key="phase2"
-            slotUrls={viewState.slotUrls}
-            deviceId={viewState.deviceId}
-            manualMatch={viewState.manualMatch}
-            logs={viewState.diagnosticLogs}
+            slotUrls={state.slotUrls}
+            deviceId={state.deviceId}
+            manualMatch={state.manualMatch}
+            logs={state.diagnosticLogs}
             onManualReady={() => {
-              if (!testState) {
-                dispatch({ type: "MANUAL_RETRIEVED" });
-              }
+              dispatch({ type: "MANUAL_RETRIEVED" });
             }}
           />
         )}
 
-        {viewState.phase === "PHASE_3_SYNTHESIS" && (
+        {state.phase === "PHASE_3_SYNTHESIS" && (
           <Phase3Synthesis
             key="phase3"
-            progress={viewState.synthesisProgress}
-            logs={viewState.diagnosticLogs}
+            progress={state.synthesisProgress}
+            logs={state.diagnosticLogs}
           />
         )}
 
-        {viewState.phase === "COMPLETE" && viewState.repairSteps && (
+        {state.phase === "COMPLETE" && state.repairSteps && (
           <ResultPane
             key="complete"
-            steps={viewState.repairSteps}
-            logs={viewState.diagnosticLogs}
+            steps={state.repairSteps}
+            logs={state.diagnosticLogs}
           />
         )}
 
-        {viewState.phase === "ERROR" && (
+        {state.phase === "ERROR" && (
           <div
             key="error"
             className="flex min-h-screen flex-col items-center justify-center px-8"
@@ -102,12 +88,11 @@ export default function OperaShell({ testStateKey }: OperaShellProps) {
                 S Y S T E M &nbsp; E R R O R
               </p>
               <p className="font-mono text-sm text-black">
-                {viewState.error || "An unknown error occurred."}
+                {state.error || "An unknown error occurred."}
               </p>
               <button
                 className="opera-border mt-8 bg-black px-6 py-2 font-mono text-xs text-white"
                 onClick={() => {
-                  if (testState) return;
                   dispatch({ type: "RESET" });
                   setSSEEnabled(false);
                 }}
@@ -120,7 +105,7 @@ export default function OperaShell({ testStateKey }: OperaShellProps) {
       </AnimatePresence>
 
       <AnimatePresence>
-        {viewState.phase === "TRANSITION_CUT" && (
+        {state.phase === "TRANSITION_CUT" && (
           <TransitionCut key="cut" onComplete={handleCutComplete} />
         )}
       </AnimatePresence>
