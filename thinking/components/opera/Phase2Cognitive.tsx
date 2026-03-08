@@ -40,7 +40,7 @@ export default function Phase2Cognitive({
     >
       <div className="mb-4">
         <p className="opera-label text-black/50">
-          P H A S E &nbsp; 2 &nbsp; — &nbsp; C O G N I T I V E &nbsp; E N G I N E
+          C O G N I T I V E &nbsp; E N G I N E
         </p>
       </div>
 
@@ -60,7 +60,7 @@ export default function Phase2Cognitive({
       {/* Terminal area */}
       <div className="flex flex-1 flex-col items-center justify-center">
         {/* Device identification scramble */}
-        <div className="opera-border opera-shadow mb-8 w-full max-w-2xl bg-white p-8">
+        <div className="opera-border opera-shadow opera-hover mb-8 w-full max-w-2xl bg-white p-8">
           <p className="opera-label mb-4 text-black/40">
             D E V I C E &nbsp; S I G N A T U R E
           </p>
@@ -92,7 +92,7 @@ export default function Phase2Cognitive({
               initial={{ scale: 1.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="opera-border opera-shadow mb-8 w-full max-w-2xl bg-white p-8"
+              className="opera-border opera-shadow opera-hover mb-8 w-full max-w-2xl bg-white p-8"
             >
               <p className="opera-label mb-2 text-black/40">
                 M A N U A L &nbsp; L O C A T E D

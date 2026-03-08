@@ -10,7 +10,7 @@ export default function AsciiProgressBar({ progress }: AsciiProgressBarProps) {
   const bar = "\u2588".repeat(filled) + "\u2591".repeat(10 - filled);
 
   return (
-    <div className="opera-border bg-white p-4 font-mono text-sm">
+    <div className="border-2 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_var(--color-brand)] transition-shadow duration-300 bg-white p-4 font-mono text-sm">
       <span className="text-black/40">[</span>
       <span className="text-black">{bar}</span>
       <span className="text-black/40">]</span>

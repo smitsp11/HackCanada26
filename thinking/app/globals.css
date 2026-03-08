@@ -49,6 +49,15 @@ body {
   font-family: var(--font-mono), ui-monospace, monospace;
 }
 
+.opera-hover {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.opera-hover:hover {
+  box-shadow: 8px 8px 0px 0px #2563eb;
+  border-color: #2563eb;
+}
+
 @keyframes scanSweep {
   0% {
     top: 0%;

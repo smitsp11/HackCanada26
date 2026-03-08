@@ -73,31 +73,61 @@ export async function GET(request: NextRequest) {
           {
             id: 1,
             instruction:
-              "Disconnect the power supply by unplugging the appliance from the wall outlet. Wait 30 seconds for residual charge to dissipate.",
+              "Turn off gas and electrical supplies to furnace. CAUTION: ELECTRICAL SHOCK AND FIRE HAZARD — Failure to follow this warning could result in personal injury, death, and/or property damage. Turn off the gas and electrical supplies to the furnace and install lockout tag before performing any maintenance or service.",
             schematicUrl: null,
           },
           {
             id: 2,
             instruction:
-              "Open the lower access panel by removing the two Phillips-head screws on the bottom front edge. Pull the panel toward you gently.",
+              "Remove control door.",
             schematicUrl: null,
           },
           {
             id: 3,
             instruction:
-              "Locate the drain pump assembly on the lower left side. Check for debris or foreign objects blocking the impeller.",
+              "Disconnect igniter wire connection.",
             schematicUrl: null,
           },
           {
             id: 4,
             instruction:
-              "Inspect the inlet valve solenoid connections. Ensure the wiring harness is firmly seated and not corroded.",
+              "Check igniter resistance across both igniter leads in connector using an ohm meter. Cold reading should be between 40 ohms and 70 ohms.",
             schematicUrl: null,
           },
           {
             id: 5,
             instruction:
-              "Reassemble the access panel and restore power. Run a test cycle on the rinse-only program to verify the repair.",
+              "Using a 1/4-in. driver, remove the two screws securing the igniter mounting bracket to the burner assembly. Carefully withdraw the igniter and bracket assembly through the front of the burner assembly without striking surrounding parts. Inspect igniter for signs of damage or failure. If replacement is required, remove the screw that secures the igniter on igniter bracket and remove the igniter.",
+            schematicUrl: null,
+          },
+          {
+            id: 6,
+            instruction:
+              "To replace igniter and bracket assembly, reverse the removal steps (5a through 5d).",
+            schematicUrl: null,
+          },
+          {
+            id: 7,
+            instruction:
+              "Reconnect igniter harness to the igniter, dressing the igniter wires to ensure there is no tension on the igniter itself.",
+            schematicUrl: null,
+          },
+          {
+            id: 8,
+            instruction:
+              "Turn on gas and electrical supplies to furnace.",
+            schematicUrl: null,
+          },
+          {
+            id: 9,
+            instruction:
+              "Verify igniter operation by initiating control board self-test feature or by cycling thermostat.",
+            schematicUrl: null,
+          },
+          {
+            id: 10,
+            instruction:
+              "Replace control door.",
             schematicUrl: null,
           },
         ],

@@ -49,7 +49,7 @@ export default function MediaSlot({
   return (
     <motion.div
       layoutId={`slot-${index}`}
-      className={`opera-border relative flex aspect-square items-center justify-center overflow-hidden bg-white transition-opacity ${
+      className={`border-2 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_var(--color-brand)] transition-shadow duration-300 relative flex aspect-square items-center justify-center overflow-hidden bg-white ${
         isDone ? "opacity-70" : "opacity-100"
       }`}
     >

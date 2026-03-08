@@ -62,7 +62,7 @@ export default function ResultPane({ steps, logs }: ResultPaneProps) {
             <motion.div
               key={step.id}
               variants={stepVariants}
-              className="opera-border bg-white p-6"
+              className="opera-border opera-shadow opera-hover bg-white p-6"
             >
               <div className="mb-2 flex items-baseline gap-3">
                 <span className="font-mono text-2xl font-black text-black">
@@ -104,7 +104,7 @@ export default function ResultPane({ steps, logs }: ResultPaneProps) {
         {stepsWithSchematics.length > 0 ? (
           <div className="space-y-6">
             {stepsWithSchematics.map((step) => (
-              <div key={step.id} className="opera-border opera-shadow bg-white p-4">
+              <div key={step.id} className="opera-border opera-shadow opera-hover bg-white p-4">
                 <p className="opera-label mb-2 text-black/40">
                   S T E P &nbsp; {String(step.id).padStart(2, "0")}
                 </p>

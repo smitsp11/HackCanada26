@@ -22,7 +22,7 @@ export default function Phase3Synthesis({
     >
       <div className="mb-6">
         <p className="opera-label text-black/50">
-          P H A S E &nbsp; 3 &nbsp; — &nbsp; S Y N T H E S I S
+          S Y N T H E S I S
         </p>
       </div>
 
@@ -33,7 +33,7 @@ export default function Phase3Synthesis({
           </p>
           <AsciiProgressBar progress={progress} />
 
-          <div className="mt-6 opera-border bg-white p-6">
+          <div className="mt-6 opera-border opera-shadow opera-hover bg-white p-6">
             <p className="opera-label mb-3 text-black/40">
               O P E R A T I O N S
             </p>

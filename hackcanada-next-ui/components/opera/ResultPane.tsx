@@ -62,7 +62,7 @@ export default function ResultPane({ steps, logs }: ResultPaneProps) {
             <motion.div
               key={step.id}
               variants={stepVariants}
-              className="opera-border bg-white p-6"
+              className="border-2 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_var(--color-brand)] transition-shadow duration-300 bg-white p-6"
             >
               <div className="mb-2 flex items-baseline gap-3">
                 <span className="font-mono text-2xl font-black text-black">
@@ -97,14 +97,15 @@ export default function ResultPane({ steps, logs }: ResultPaneProps) {
         }}
         className="w-96 shrink-0 overflow-y-auto border-l border-black bg-gray-50 px-6 py-12"
       >
-        <p className="opera-label mb-6 text-black/50">
-          V I S U A L &nbsp; S C H E M A T I C S
-        </p>
+        <div className="opera-label mb-6 text-black/50">
+          <p>V I S U A L</p>
+          <p>S C H E M A T I C S</p>
+        </div>
 
         {stepsWithSchematics.length > 0 ? (
           <div className="space-y-6">
             {stepsWithSchematics.map((step) => (
-              <div key={step.id} className="opera-border opera-shadow bg-white p-4">
+              <div key={step.id} className="border-2 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_var(--color-brand)] transition-shadow duration-300 bg-white p-4">
                 <p className="opera-label mb-2 text-black/40">
                   S T E P &nbsp; {String(step.id).padStart(2, "0")}
                 </p>

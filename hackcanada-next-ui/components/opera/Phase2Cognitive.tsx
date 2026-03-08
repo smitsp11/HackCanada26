@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import MediaSlot from "./MediaSlot";
 import TerminalLog from "./TerminalLog";
 import ScrambledText from "@/components/ui/ScrambledText";
 
@@ -12,6 +11,26 @@ interface Phase2CognitiveProps {
   manualMatch: { id: string; title: string } | null;
   logs: string[];
   onManualReady: () => void;
+}
+
+function Thumbnail({ url, index, matched }: { url: string | null; index: number; matched: boolean }) {
+  const isVideo = index === 3;
+  return (
+    <motion.div
+      className="relative w-12 h-12 border border-black/20 overflow-hidden bg-black/5"
+      animate={{
+        borderColor: matched ? "var(--color-brand)" : "rgba(0,0,0,0.2)",
+        borderWidth: matched ? 2 : 1,
+      }}
+      transition={{ duration: 0.4, delay: index * 0.1 }}
+    >
+      {url && (
+        isVideo
+          ? <video src={url} className="w-full h-full object-cover" muted autoPlay loop playsInline />
+          : <img src={url} alt={`Asset ${index + 1}`} className="w-full h-full object-cover" />
+      )}
+    </motion.div>
+  );
 }
 
 export default function Phase2Cognitive({
@@ -40,49 +59,45 @@ export default function Phase2Cognitive({
     >
       <div className="mb-4">
         <p className="opera-label text-black/50">
-          P H A S E &nbsp; 2 &nbsp; — &nbsp; C O G N I T I V E &nbsp; E N G I N E
+          C O G N I T I V E &nbsp; E N G I N E
         </p>
       </div>
 
-      {/* Reference strip -- slots shrink to thin bar */}
-      <div className="mb-8 grid grid-cols-4 gap-2">
-        {[0, 1, 2, 3].map((i) => (
-          <MediaSlot
-            key={i}
-            index={i}
-            status="complete"
-            url={slotUrls[i]}
-            compact
-          />
-        ))}
-      </div>
-
-      {/* Terminal area */}
       <div className="flex flex-1 flex-col items-center justify-center">
-        {/* Device identification scramble */}
-        <div className="opera-border opera-shadow mb-8 w-full max-w-2xl bg-white p-8">
-          <p className="opera-label mb-4 text-black/40">
-            D E V I C E &nbsp; S I G N A T U R E
-          </p>
-          {deviceId ? (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="font-mono text-lg font-bold tracking-wide text-black"
-            >
-              MATCH_FOUND: {deviceId}
-            </motion.p>
-          ) : (
-            <ScrambledText
-              radius={150}
-              duration={1.2}
-              speed={0.5}
-              scrambleChars=".:#@█░▒▓"
-              className="tracking-wide"
-            >
-              SCANNING_DEVICE_SIGNATURE...
-            </ScrambledText>
-          )}
+        {/* Device Signature card with embedded thumbnails */}
+        <div className="border-2 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_var(--color-brand)] transition-shadow duration-300 mb-8 w-full max-w-2xl bg-white p-8">
+          <div className="flex items-start justify-between gap-6">
+            <div className="flex-1 min-w-0">
+              <p className="opera-label mb-4 text-black/40">
+                D E V I C E &nbsp; S I G N A T U R E
+              </p>
+              {deviceId ? (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="font-mono text-lg font-bold tracking-wide text-black"
+                >
+                  MATCH_FOUND: {deviceId}
+                </motion.p>
+              ) : (
+                <ScrambledText
+                  radius={150}
+                  duration={1.2}
+                  speed={0.5}
+                  scrambleChars=".:#@█░▒▓"
+                  className="tracking-wide"
+                >
+                  SCANNING_DEVICE_SIGNATURE...
+                </ScrambledText>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-1.5 shrink-0">
+              {slotUrls.map((url, i) => (
+                <Thumbnail key={i} url={url} index={i} matched={!!deviceId} />
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Manual card slam */}
@@ -92,7 +107,7 @@ export default function Phase2Cognitive({
               initial={{ scale: 1.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="opera-border opera-shadow mb-8 w-full max-w-2xl bg-white p-8"
+              className="border-2 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_var(--color-brand)] transition-shadow duration-300 mb-8 w-full max-w-2xl bg-white p-8"
             >
               <p className="opera-label mb-2 text-black/40">
                 M A N U A L &nbsp; L O C A T E D

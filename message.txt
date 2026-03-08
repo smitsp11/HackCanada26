@@ -1,0 +1,75 @@
+{
+  "page": "66",
+  "repair_steps": [
+    {
+      "step": 1,
+      "category": "power|gas",
+      "action": "Turn off gas and electrical supplies to furnace.",
+      "caution": "ELECTRICAL SHOCK AND FIRE HAZARD: Failure to follow this warning could result in personal injury, death, and/or property damage. Turn off the gas and electrical supplies to the furnace and install lockout tag before performing any maintenance or service. Follow the operating instructions on the label attached to the furnace.",
+      "visual_description": "Line drawing of furnace with gas valve handle turned to OFF and electrical disconnect switch in OFF position with a lockout tag."
+    },
+    {
+      "step": 2,
+      "category": "tool",
+      "action": "Remove control door.",
+      "caution": "None",
+      "visual_description": "Line drawing of furnace with control door being removed."
+    },
+    {
+      "step": 3,
+      "category": "wiring",
+      "action": "Disconnect igniter wire connection.",
+      "caution": "None",
+      "visual_description": "Line drawing showing igniter wire harness unplugged from the igniter."
+    },
+    {
+      "step": 4,
+      "category": "tool",
+      "action": "Check igniter resistance across both igniter leads in connector using an ohm meter. Cold reading should be between 40 ohms and 70 ohms.",
+      "caution": "None",
+      "visual_description": "Line drawing of igniter with multimeter probes connected to its leads, showing a resistance reading."
+    },
+    {
+      "step": 5,
+      "category": "tool|screw",
+      "action": "Using a 1/4-in. driver, remove the two screws securing the igniter mounting bracket to the burner assembly (See Fig. 68 on page 65). Carefully withdraw the igniter and bracket assembly through the front of the burner assembly without striking surrounding parts. Inspect igniter for signs of damage or failure. If replacement is required, remove the screw that secures the igniter on igniter bracket and remove the igniter.",
+      "caution": "None",
+      "visual_description": "Line drawing showing a screwdriver removing screws from the igniter mounting bracket on the burner assembly, then the igniter being carefully pulled out."
+    },
+    {
+      "step": 6,
+      "category": "tool|screw",
+      "action": "To replace igniter and bracket assembly, reverse the removal steps (5a through 5d).",
+      "caution": "None",
+      "visual_description": "Line drawing showing the igniter and bracket assembly being inserted into the burner assembly and secured with screws using a screwdriver."
+    },
+    {
+      "step": 7,
+      "category": "wiring",
+      "action": "Reconnect igniter harness to the igniter, dressing the igniter wires to ensure there is no tension on the igniter itself (See Fig. 68 on page 65).",
+      "caution": "None",
+      "visual_description": "Line drawing showing the igniter wire harness being plugged back into the igniter, with wires neatly routed."
+    },
+    {
+      "step": 8,
+      "category": "power|gas",
+      "action": "Turn on gas and electrical supplies to furnace.",
+      "caution": "None",
+      "visual_description": "Line drawing of furnace with gas valve handle turned to ON and electrical disconnect switch in ON position."
+    },
+    {
+      "step": 9,
+      "category": "None",
+      "action": "Verify igniter operation by initiating control board self-test feature or by cycling thermostat.",
+      "caution": "None",
+      "visual_description": "Line drawing of furnace control board with self-test buttons being pressed, or a thermostat set to call for heat."
+    },
+    {
+      "step": 10,
+      "category": "None",
+      "action": "Replace control door.",
+      "caution": "None",
+      "visual_description": "Line drawing of furnace with control door being reinstalled."
+    }
+  ]
+}

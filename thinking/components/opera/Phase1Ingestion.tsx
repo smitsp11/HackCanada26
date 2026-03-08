@@ -52,7 +52,7 @@ export default function Phase1Ingestion({
     >
       <div className="mb-6">
         <p className="opera-label text-black/50">
-          P H A S E &nbsp; 1 &nbsp; — &nbsp; V I S U A L &nbsp; I N G E S T I O N
+          V I S U A L &nbsp; I N G E S T I O N
         </p>
       </div>
 
