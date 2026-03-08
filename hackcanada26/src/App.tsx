@@ -4,13 +4,17 @@ import { fill } from '@cloudinary/url-gen/actions/resize';
 import { format, quality } from '@cloudinary/url-gen/actions/delivery';
 import { auto } from '@cloudinary/url-gen/qualifiers/format';
 import { auto as autoQuality } from '@cloudinary/url-gen/qualifiers/quality';
-import { autoGravity } from '@cloudinary/url-gen/qualifiers/gravity';
+import { autoGravity, compass } from '@cloudinary/url-gen/qualifiers/gravity';
 import {
   backgroundRemoval,
   generativeBackgroundReplace,
   enhance,
   generativeReplace,
 } from '@cloudinary/url-gen/actions/effect';
+import { source } from '@cloudinary/url-gen/actions/overlay';
+import { text } from '@cloudinary/url-gen/qualifiers/source';
+import { Position } from '@cloudinary/url-gen/qualifiers/position';
+import { TextStyle } from '@cloudinary/url-gen/qualifiers/textStyle';
 import { cld, uploadPreset } from './cloudinary/config';
 import { UploadWidget } from './cloudinary/UploadWidget';
 import type { CloudinaryUploadResult } from './cloudinary/UploadWidget';
@@ -94,6 +98,31 @@ const AI_DEMOS: AIDemo[] = [
         .image(imageId)
         .effect(generativeReplace().from('bicycle').to('motorcycle'))
         .resize(fill().width(500).height(400).gravity(autoGravity()))
+        .delivery(format(auto()))
+        .delivery(quality(autoQuality())),
+  },
+  {
+    id: 'annotate',
+    title: 'Text Annotation',
+    description:
+      'Adds a text overlay pinned to the girl\'s hat using Cloudinary\'s overlay API — position, font, color & background are all URL params.',
+    emoji: '📌',
+    applyEffect: (imageId) =>
+      cld
+        .image(imageId)
+        .resize(fill().width(500).height(400).gravity(autoGravity()))
+        .overlay(
+          source(
+            text('Nice hat!', new TextStyle('Arial', 26).fontWeight('bold'))
+              .textColor('white')
+              .backgroundColor('#e91e63dd')
+          ).position(
+            new Position()
+              .gravity(compass('north_west'))
+              .offsetX(270)
+              .offsetY(45)
+          )
+        )
         .delivery(format(auto()))
         .delivery(quality(autoQuality())),
   },

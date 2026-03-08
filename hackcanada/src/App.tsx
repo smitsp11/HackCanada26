@@ -86,11 +86,11 @@ function App() {
           <div className="flex flex-col border border-black bg-studio shadow-[8px_8px_0px_rgba(0,0,0,1)]">
             <div className="px-6 pt-5 pb-3 flex items-center justify-between border-b border-black">
               <span className="font-mono text-[10px] tracking-[0.25em] uppercase text-black/60">
-                VIEWS
+                Media
               </span>
               {assets.length > 0 && (
                 <span className="font-mono text-[10px] tracking-[0.25em] uppercase text-black/60">
-                  {assets.length} MOUNTED
+                  {assets.length} Added
                 </span>
               )}
             </div>
@@ -136,7 +136,7 @@ function App() {
                                   FIG. {asset.figure}
                                 </span>
                                 <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-black/40">
-                                  MOUNTED
+                                  Uploaded
                                 </span>
                               </div>
                             </div>
@@ -149,7 +149,7 @@ function App() {
                           disabled={!isReady}
                           className="mt-6 w-full py-4 border border-dashed border-black/20 bg-transparent font-mono text-[10px] tracking-[0.25em] uppercase text-black/40 cursor-pointer hover:border-black hover:text-black transition-none"
                         >
-                          + MOUNT ADDITIONAL VIEW
+                          + Add additional media
                         </button>
                       </>
                     )}
