@@ -23,12 +23,14 @@ def generate_ikea_steps(diagnosis: dict, manual_path: str) -> dict:
         )
 
     # 2. Wait for the file to be 'ACTIVE' (Crucial for PDFs/Video)
-    while file_ref.state.name == "PROCESSING":
+    while file_ref.state and file_ref.state.name == "PROCESSING":
         print(".", end="", flush=True)
         time.sleep(2)
+        if file_ref.name is None:
+            raise ValueError("File name is None")
         file_ref = client.files.get(name=file_ref.name)
     
-    if file_ref.state.name == "FAILED":
+    if file_ref.state and file_ref.state.name == "FAILED":
         raise ValueError("PDF processing failed.")
 
     prompt = f"""
