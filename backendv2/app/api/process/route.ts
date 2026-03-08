@@ -179,7 +179,11 @@ export async function POST(req: NextRequest) {
       annotatedUrl: annotateData?.annotatedUrl ?? null,
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("process failed:", error);
-    return NextResponse.json({ error: "Process pipeline failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Process pipeline failed", detail: message },
+      { status: 500 }
+    );
   }
 }

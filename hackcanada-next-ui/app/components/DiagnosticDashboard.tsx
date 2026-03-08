@@ -17,6 +17,7 @@ type StepData = {
 type ProcessApiResponse = {
   annotatedUrl?: string | null;
   error?: string;
+  detail?: string;
 };
 
 interface DiagnosticDashboardProps {
@@ -73,7 +74,10 @@ export function DiagnosticDashboard({ assets, mockDiagnosis, mockSteps }: Diagno
       }
 
       if (!processRes.ok) {
-        throw new Error(processData.error || "Process request failed");
+        const msg = processData.detail
+          ? `${processData.error || "Process request failed"}: ${processData.detail}`
+          : processData.error || "Process request failed";
+        throw new Error(msg);
       }
 
       if (!processData.annotatedUrl) {
