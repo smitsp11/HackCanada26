@@ -133,7 +133,7 @@ export function UploadWidget({
   if (!hasConfig) {
     return (
       <div className="font-mono text-[10px] uppercase tracking-widest text-black/50">
-        ERROR: SET NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME IN .env.local
+        ERROR: CLOUDINARY CONFIG MISSING IN app/cloudinary/config.ts
       </div>
     );
   }
