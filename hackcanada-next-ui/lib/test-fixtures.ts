@@ -31,21 +31,22 @@ const baseLogs = [
 
 const baseState: OperaState = {
   phase: "IDLE",
-  slots: ["idle", "idle", "idle", "idle"],
-  slotUrls: [null, null, null, null],
+  slots: ["idle", "idle", "idle"],
+  slotUrls: [null, null, null],
   deviceId: null,
   manualMatch: null,
+  symptomSections: null,
+  partsCheck: null,
   synthesisProgress: 0,
   diagnosticLogs: [],
   repairSteps: null,
   error: null,
 };
 
-const slotUrls: [string | null, string | null, string | null, string | null] = [
+const slotUrls: [string | null, string | null, string | null] = [
   "/api/diagnose/placeholder?slot=0",
   "/api/diagnose/placeholder?slot=1",
   "/api/diagnose/placeholder?slot=2",
-  "/api/diagnose/placeholder?slot=3",
 ];
 
 const withLongLogs = Array.from({ length: 24 }, (_, index) => {
@@ -92,47 +93,46 @@ const stateMap: Record<OperaTestStateKey, OperaState> = {
   "phase1-initial": {
     ...baseState,
     phase: "PHASE_1_INGESTION",
-    slots: ["processing", "idle", "idle", "idle"],
+    slots: ["processing", "idle", "idle"],
     diagnosticLogs: baseLogs.slice(0, 3),
   },
   "phase1-mixed": {
     ...baseState,
     phase: "PHASE_1_INGESTION",
-    slots: ["complete", "processing", "idle", "complete"],
+    slots: ["complete", "processing", "idle"],
     slotUrls,
     diagnosticLogs: withLongLogs,
   },
   "phase1-complete": {
     ...baseState,
     phase: "PHASE_1_INGESTION",
-    slots: ["complete", "complete", "complete", "complete"],
+    slots: ["complete", "complete", "complete"],
     slotUrls,
     diagnosticLogs: [
       ...baseLogs,
       "SLOT_0_LOCKED [OK]",
       "SLOT_1_LOCKED [OK]",
       "SLOT_2_LOCKED [OK]",
-      "SLOT_3_LOCKED [OK]",
     ],
   },
   "transition-cut": {
     ...baseState,
     phase: "TRANSITION_CUT",
-    slots: ["complete", "complete", "complete", "complete"],
+    slots: ["complete", "complete", "complete"],
     slotUrls,
     diagnosticLogs: [...baseLogs, "ALL_SLOTS_COMPLETE"],
   },
   "phase2-pre-id": {
     ...baseState,
     phase: "PHASE_2_COGNITIVE",
-    slots: ["complete", "complete", "complete", "complete"],
+    slots: ["complete", "complete", "complete"],
     slotUrls,
     diagnosticLogs: [...baseLogs, "SCANNING_DEVICE_SIGNATURE..."],
   },
   "phase2-matched": {
     ...baseState,
     phase: "PHASE_2_COGNITIVE",
-    slots: ["complete", "complete", "complete", "complete"],
+    slots: ["complete", "complete", "complete"],
     slotUrls,
     deviceId: "Comfort™ 96 Condensing Gas Furnace",
     manualMatch: {
