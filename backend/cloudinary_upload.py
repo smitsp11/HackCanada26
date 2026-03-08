@@ -10,7 +10,6 @@ Usage:
 import os
 import sys
 import json
-import mimetypes
 from dotenv import load_dotenv
 
 import cloudinary
@@ -31,10 +30,6 @@ cloudinary.config(
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff", ".gif", ".heic"}
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm", ".wmv", ".flv"}
 
-# Keyframe intervals in seconds (for a ~15s video)
-KEYFRAME_OFFSETS = [0, 3, 6, 9, 12]
-
-
 def detect_media_type(file_path):
     """Detect whether a file is an image or video based on its extension."""
     ext = os.path.splitext(file_path)[1].lower()
@@ -49,9 +44,9 @@ def detect_media_type(file_path):
 def process_image(file_path):
     """
     Upload an image to Cloudinary and return optimized URLs.
-    
+
     Applies: auto-format, auto-quality, and auto-enhance (lighten/improve).
-    
+
     Returns dict with:
         - public_id: Cloudinary public ID
         - original_url: direct upload URL
@@ -59,7 +54,6 @@ def process_image(file_path):
     """
     print(f"📷 Uploading image: {os.path.basename(file_path)}")
 
-    # Upload
     result = cloudinary.uploader.upload(
         file_path,
         resource_type="image",
@@ -70,7 +64,7 @@ def process_image(file_path):
     public_id = result["public_id"]
     original_url = result["secure_url"]
 
-    # Generate optimized URL: auto-format, auto-quality, auto-enhance
+    # Auto-format, auto-quality, auto-enhance
     optimized_url, _ = cloudinary_url(
         public_id,
         fetch_format="auto",
@@ -94,73 +88,79 @@ def process_image(file_path):
 
 def process_video(file_path):
     """
-    Upload a video to Cloudinary, extract keyframes at set intervals.
-    
-    Extracts frames at 0s, 3s, 6s, 9s, 12s as JPG images via Cloudinary URL API.
-    Each keyframe URL can be passed directly to Gemini Vision for analysis.
-    
+    Upload a video to Cloudinary with eager optimization transforms applied at
+    upload time so the optimized rendition is cached and ready immediately.
+
+    Optimizations applied:
+        - vc_auto:       normalize codec + audio settings for web delivery
+        - q_auto:        optimal quality/filesize tradeoff
+        - f_auto:video:  deliver in best supported format (WebM/HEVC/H264)
+        - fl_progressive: progressive download for short-form video
+
     Returns dict with:
-        - public_id: Cloudinary public ID
-        - video_url: direct video URL
-        - keyframes: list of { offset_seconds, url }
+        - public_id
+        - video_url:     original upload URL
+        - optimized_url: optimized delivery URL ready for Gemini
     """
     print(f"🎬 Uploading video: {os.path.basename(file_path)}")
 
-    # Upload as video
+    # Eager transformation: pre-generate optimized rendition at upload time
+    # so it's cached before first request — avoids on-the-fly delay
+    eager_transforms = [
+        {
+            "video_codec": "auto",    # normalize codec + audio for web
+            "quality": "auto",        # optimal quality/size tradeoff
+            "fetch_format": "auto",   # best format per browser (WebM/H264/HEVC)
+            "flags": "progressive",   # progressive download for short videos
+        }
+    ]
+
     result = cloudinary.uploader.upload(
         file_path,
         resource_type="video",
         use_filename=True,
         unique_filename=True,
+        eager=eager_transforms,
+        eager_async=False,            # wait for eager to finish before returning
     )
 
     public_id = result["public_id"]
     video_url = result["secure_url"]
     duration = result.get("duration", 15)
 
-    print(f"✅ Video uploaded: {public_id} ({duration:.1f}s)")
-    print(f"   Video URL: {video_url}")
-
-    # Extract keyframes at each offset
-    # Pattern: use resource_type="video" with format="jpg" and start_offset
-    keyframes = []
-    for offset in KEYFRAME_OFFSETS:
-        if offset > duration:
-            break
-
-        frame_url, _ = cloudinary_url(
+    # Pull optimized URL from eager results if available, otherwise build manually
+    if result.get("eager") and len(result["eager"]) > 0:
+        optimized_url = result["eager"][0]["secure_url"]
+    else:
+        optimized_url, _ = cloudinary_url(
             public_id,
             resource_type="video",
-            format="jpg",
-            start_offset=str(offset),
+            video_codec="auto",
             quality="auto",
             fetch_format="auto",
+            flags="progressive",
         )
 
-        keyframes.append({
-            "offset_seconds": offset,
-            "url": frame_url,
-        })
-        print(f"   Frame @{offset}s: {frame_url}")
+    print(f"✅ Video uploaded: {public_id} ({duration:.1f}s)")
+    print(f"   Original URL:  {video_url}")
+    print(f"   Optimized URL: {optimized_url}")
 
-    output = {
+    return {
         "type": "video",
         "public_id": public_id,
         "video_url": video_url,
+        "optimized_url": optimized_url,
         "duration": duration,
-        "keyframes": keyframes,
     }
-
-    return output
 
 
 def process_media(file_path):
     """
     Main entry point: auto-detect media type and process accordingly.
-    
-    - Image → upload + optimize/lighten
-    - Video → upload + extract keyframes
-    
+
+    - Image → upload + optimize/enhance, returns optimized image URL
+    - Video → upload + optimize, returns optimized video URL
+
     Returns structured dict with URLs ready for Gemini Vision API.
     """
     if not os.path.exists(file_path):
@@ -175,12 +175,8 @@ def process_media(file_path):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python cloudinary_upload.py <file_path>")
-        print("  Supports images (.jpg, .png, .webp, etc.) and videos (.mp4, .mov, etc.)")
-        sys.exit(1)
 
-    file_path = sys.argv[1]
+    file_path = "backend/videos/reddit_hvacadvice_wwvjkj.mp4"
 
     try:
         result = process_media(file_path)
@@ -191,3 +187,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"❌ Error: {e}")
         sys.exit(1)
+        
+        
+        
