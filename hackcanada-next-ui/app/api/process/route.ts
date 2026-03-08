@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const DEFAULT_PROCESS_URL = "http://localhost:3001/api/process";
+const DEFAULT_PROCESS_URL = "https://hack-canada26.vercel.app/";
 
 export async function POST(req: NextRequest) {
   try {
