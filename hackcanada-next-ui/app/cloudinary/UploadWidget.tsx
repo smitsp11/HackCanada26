@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, useCallback, type ReactNode } from "react";
 import { cloudName, uploadPreset } from "./config";
 
 export interface CloudinaryUploadResult {
@@ -46,18 +46,49 @@ declare global {
   }
 }
 
+const WIDGET_CONFIG = {
+  cloudName,
+  uploadPreset: uploadPreset || undefined,
+  sources: ["local", "camera", "url"] as const,
+  styles: {
+    palette: {
+      window: "#ffffff",
+      windowBorder: "#09090b",
+      tabIcon: "#09090b",
+      menuIcons: "#09090b",
+      textDark: "#09090b",
+      textLight: "#ffffff",
+      link: "#004DFF",
+      action: "#09090b",
+      inactiveTabIcon: "#a1a1aa",
+      error: "#ef4444",
+      inProgress: "#004DFF",
+      complete: "#22c55e",
+      sourceBg: "#f4f4f5",
+    },
+    fonts: {
+      default: null,
+      "sans-serif": { url: null, active: true },
+    },
+  },
+} as const;
+
 export function UploadWidget({
   onUploadSuccess,
   onUploadError,
   multiple = false,
-  defaultSource, 
+  defaultSource,
   children,
 }: UploadWidgetProps) {
   const widgetRef = useRef<{ open: () => void } | null>(null);
-  const [openWidget, setOpenWidget] = useState<(() => void) | null>(null);
-  const [isReady, setIsReady] = useState(false);
+  const [isScriptReady, setIsScriptReady] = useState(false);
   const [scriptError, setScriptError] = useState(false);
   const hasConfig = cloudName.trim().length > 0;
+
+  const onUploadSuccessRef = useRef(onUploadSuccess);
+  const onUploadErrorRef = useRef(onUploadError);
+  onUploadSuccessRef.current = onUploadSuccess;
+  onUploadErrorRef.current = onUploadError;
 
   useEffect(() => {
     if (!hasConfig) return;
@@ -65,59 +96,6 @@ export function UploadWidget({
     let poll: ReturnType<typeof setInterval> | null = null;
     let timeout: ReturnType<typeof setTimeout> | null = null;
     let mounted = true;
-
-    function initializeWidget() {
-      if (!mounted || typeof window.cloudinary?.createUploadWidget !== "function")
-        return;
-
-      widgetRef.current = window.cloudinary.createUploadWidget(
-        {
-          cloudName,
-          uploadPreset: uploadPreset || undefined,
-          sources: ["local", "camera", "url"],
-          defaultSource: defaultSource,
-          multiple,
-          styles: {
-            palette: {
-              window: "#ffffff",
-              windowBorder: "#09090b",
-              tabIcon: "#09090b",
-              menuIcons: "#09090b",
-              textDark: "#09090b",
-              textLight: "#ffffff",
-              link: "#004DFF",     // Electric Cobalt
-              action: "#09090b",
-              inactiveTabIcon: "#a1a1aa",
-              error: "#ef4444",
-              inProgress: "#004DFF", // Electric Cobalt
-              complete: "#22c55e",
-              sourceBg: "#f4f4f5"  // Studio background
-            },
-            fonts: {
-              default: null,
-              "sans-serif": {
-                url: null,
-                active: true
-              }
-            }
-          }
-        },
-        (error: CloudinaryWidgetError | null, result: CloudinaryWidgetResult | null) => {
-          if (error) {
-            onUploadError?.(new Error(error.message || "Upload failed"));
-            return;
-          }
-          if (result && result.event === "success") {
-            onUploadSuccess?.(result.info);
-          }
-        },
-      );
-
-      setOpenWidget(() => () => {
-        widgetRef.current?.open();
-      });
-      setIsReady(true);
-    }
 
     function isWidgetReady(): boolean {
       return typeof window.cloudinary?.createUploadWidget === "function";
@@ -127,7 +105,7 @@ export function UploadWidget({
       if (isWidgetReady()) {
         if (poll) clearInterval(poll);
         if (timeout) clearTimeout(timeout);
-        initializeWidget();
+        if (mounted) setIsScriptReady(true);
       }
     }, 500);
 
@@ -141,7 +119,7 @@ export function UploadWidget({
     if (isWidgetReady()) {
       if (poll) clearInterval(poll);
       if (timeout) clearTimeout(timeout);
-      initializeWidget();
+      setIsScriptReady(true);
     }
 
     return () => {
@@ -149,13 +127,32 @@ export function UploadWidget({
       if (poll) clearInterval(poll);
       if (timeout) clearTimeout(timeout);
     };
-  }, [hasConfig, multiple, defaultSource, onUploadError, onUploadSuccess]);
+  }, [hasConfig]);
 
-  const handleOpen = () => {
-    if (openWidget) {
-      openWidget();
+  const handleOpen = useCallback(() => {
+    if (!isScriptReady || typeof window.cloudinary?.createUploadWidget !== "function") return;
+
+    if (!widgetRef.current) {
+      widgetRef.current = window.cloudinary.createUploadWidget(
+        {
+          ...WIDGET_CONFIG,
+          defaultSource,
+          multiple,
+        },
+        (error: CloudinaryWidgetError | null, result: CloudinaryWidgetResult | null) => {
+          if (error) {
+            onUploadErrorRef.current?.(new Error(error.message || "Upload failed"));
+            return;
+          }
+          if (result && result.event === "success") {
+            onUploadSuccessRef.current?.(result.info);
+          }
+        },
+      );
     }
-  };
+
+    widgetRef.current?.open();
+  }, [isScriptReady, multiple, defaultSource]);
 
   if (!hasConfig) {
     return (
@@ -174,17 +171,17 @@ export function UploadWidget({
   }
 
   if (children) {
-    return <>{children({ open: handleOpen, isReady })}</>;
+    return <>{children({ open: handleOpen, isReady: isScriptReady })}</>;
   }
 
   return (
     <button
       type="button"
       onClick={handleOpen}
-      disabled={!isReady}
+      disabled={!isScriptReady}
       className="px-6 py-3 text-xs font-bold font-mono uppercase tracking-[0.2em] bg-black text-white border-2 border-black cursor-pointer disabled:opacity-40 disabled:cursor-wait hover:bg-brand hover:border-brand transition-colors duration-200"
     >
-      {isReady ? "Initialize Upload" : "Loading Module"}
+      {isScriptReady ? "Initialize Upload" : "Loading Module"}
     </button>
   );
 }
