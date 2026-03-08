@@ -1,27 +1,25 @@
 import os
-import json
-import time
-import httpx  # <--- Adding this to force a network timeout
+import httpx 
 from elevenlabs.client import ElevenLabs
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# --- DEBUG: Verify the key is actually loading ---
 api_key = os.getenv("ELEVENLABS_API_KEY")
-if api_key:
-    print(f"[DEBUG] API Key Loaded: {api_key[:4]}...{api_key[-4:]}")
-else:
-    print("[DEBUG] FATAL: API KEY IS MISSING OR NONE!")
+if not api_key:
+    raise ValueError("FATAL: ELEVENLABS_API_KEY is missing from .env")
 
-# 1. Initialize ElevenLabs WITH A TIMEOUT
-# If ElevenLabs ignores us, this forces a crash after 15 seconds instead of hanging forever.
+# 1. Initialize with a 15-second timeout for hackathon network safety
 client = ElevenLabs(
     api_key=api_key,
     httpx_client=httpx.Client(timeout=15.0) 
 )
 
 def generate_step_audio(steps_data: list, output_dir: str = "assets/audio/steps"):
+    """
+    Takes the JSON 'repair_steps' and generates an MP3 for each one.
+    Returns a dictionary mapping step numbers to their local file paths.
+    """
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
 
@@ -36,49 +34,36 @@ def generate_step_audio(steps_data: list, output_dir: str = "assets/audio/steps"
         if caution and caution.lower() != "none":
             script += f"Caution: {caution}"
 
-        print(f"\n--- Processing Step {step_num} ---")
+        print(f"Generating audio for Step {step_num}...")
 
         try:
-            print("[DEBUG] 1. Sending API request to ElevenLabs... (Waiting for response)")
-            start_time = time.time()
-            
-            # The network call
             audio_stream = client.text_to_speech.convert(
                 text=script,
-                voice_id="nPczCjzI2devNBz1zQrb", # Brian
+                voice_id="nPczCjzI2devNBz1zQrb", # Brian (Professional Tech Voice)
                 model_id="eleven_multilingual_v2",
                 output_format="mp3_44100_128"
             )
             
-            print(f"[DEBUG] 2. Response received in {time.time() - start_time:.2f} seconds!")
-            
             file_name = f"step_{step_num}.mp3"
             file_path = os.path.join(output_dir, file_name)
             
-            print(f"[DEBUG] 3. Opening local file: {file_path}")
             with open(file_path, "wb") as f:
-                print("[DEBUG] 4. Writing chunks: ", end="", flush=True)
-                chunk_count = 0
                 for chunk in audio_stream:
                     if chunk:
                         f.write(chunk)
-                        chunk_count += 1
-                        print(".", end="", flush=True) # Print a dot for every chunk received
-                print(f" (Total chunks: {chunk_count})")
             
-            print(f"[DEBUG] 5. File successfully saved!")
+            print(f"  -> Saved: {file_path}")
             audio_map[step_num] = file_path
             
         except httpx.TimeoutException:
-            print(f"\n[FATAL ERROR]: Network Timeout. ElevenLabs is completely ignoring the request (Tarpit).")
+            print(f"[ERROR] Step {step_num} failed: Network timeout.")
         except Exception as e:
-            print(f"\n[FATAL ERROR]: {type(e).__name__} - {e}")
+            print(f"[ERROR] Step {step_num} failed: {e}")
 
     return audio_map
 
 if __name__ == "__main__":
-    print("--- ELEVENLABS DEBUGGER START ---")
-    
+    print("--- ELEVENLABS AUDIO GENERATOR ---")
     mock_steps = [
         {
             "step": 1, 
@@ -86,5 +71,4 @@ if __name__ == "__main__":
             "caution": "High voltage can be fatal."
         }
     ]
-    
     generate_step_audio(mock_steps)
