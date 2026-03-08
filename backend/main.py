@@ -77,7 +77,7 @@ def upload_fastapi_file_to_cloudinary(upload_file: UploadFile) -> dict:
 
 # ── Hardcoded paths for testing ───────────────────────────────────────────────
 MEDIA_PATH  = "videos/reddit_hvacadvice_wwvjkj.mp4"
-MANUAL_PATH = "manuals/24ACC6-9PD.pdf"
+MANUAL_PATH = "manuals/59SC6A-01SI REV D.pdf - 59SC6A-01SI.pdf"
 
 
 # ── Route 1: Identify ─────────────────────────────────────────────────────────
