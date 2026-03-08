@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { attachSchematics } from "@/lib/repair-step-schematics";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
       await delay(800);
       send({
         type: "synthesis_complete",
-        steps: [
+        steps: attachSchematics([
           {
             id: 1,
             instruction:
@@ -130,7 +131,7 @@ export async function GET(request: NextRequest) {
               "Replace control door.",
             schematicUrl: null,
           },
-        ],
+        ]),
       });
 
       controller.close();
