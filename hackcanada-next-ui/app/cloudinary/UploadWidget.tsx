@@ -75,8 +75,32 @@ export function UploadWidget({
           cloudName,
           uploadPreset: uploadPreset || undefined,
           sources: ["local", "camera", "url"],
-          defaultSource: defaultSource, // <-- FORCES CAMERA TAB IF PASSED
+          defaultSource: defaultSource,
           multiple,
+          styles: {
+            palette: {
+              window: "#ffffff",
+              windowBorder: "#09090b",
+              tabIcon: "#09090b",
+              menuIcons: "#09090b",
+              textDark: "#09090b",
+              textLight: "#ffffff",
+              link: "#004DFF",     // Electric Cobalt
+              action: "#09090b",
+              inactiveTabIcon: "#a1a1aa",
+              error: "#ef4444",
+              inProgress: "#004DFF", // Electric Cobalt
+              complete: "#22c55e",
+              sourceBg: "#f4f4f5"  // Studio background
+            },
+            fonts: {
+              default: null,
+              "sans-serif": {
+                url: null,
+                active: true
+              }
+            }
+          }
         },
         (error: CloudinaryWidgetError | null, result: CloudinaryWidgetResult | null) => {
           if (error) {
@@ -95,8 +119,6 @@ export function UploadWidget({
       setIsReady(true);
     }
 
-// ... (Keep the rest of the file exactly the same) ...
-
     function isWidgetReady(): boolean {
       return typeof window.cloudinary?.createUploadWidget === "function";
     }
@@ -107,7 +129,7 @@ export function UploadWidget({
         if (timeout) clearTimeout(timeout);
         initializeWidget();
       }
-    }, 100);
+    }, 500);
 
     timeout = setTimeout(() => {
       if (poll) clearInterval(poll);
