@@ -6,7 +6,7 @@ import TerminalLog from "./TerminalLog";
 import ScrambledText from "@/components/ui/ScrambledText";
 
 interface Phase2CognitiveProps {
-  slotUrls: [string | null, string | null, string | null, string | null];
+  slotUrls: [string | null, string | null, string | null];
   deviceId: string | null;
   manualMatch: { id: string; title: string } | null;
   logs: string[];
@@ -14,7 +14,7 @@ interface Phase2CognitiveProps {
 }
 
 function Thumbnail({ url, index, matched }: { url: string | null; index: number; matched: boolean }) {
-  const isVideo = index === 3;
+  const isVideo = index === 2;
   return (
     <motion.div
       className="relative w-12 h-12 border border-black/20 overflow-hidden bg-black/5"
@@ -92,10 +92,14 @@ export default function Phase2Cognitive({
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-1.5 shrink-0">
-              {slotUrls.map((url, i) => (
-                <Thumbnail key={i} url={url} index={i} matched={!!deviceId} />
-              ))}
+            <div className="flex flex-col items-center gap-1.5 shrink-0">
+              <div className="flex justify-center">
+                <Thumbnail url={slotUrls[0]} index={0} matched={!!deviceId} />
+              </div>
+              <div className="flex gap-1.5 justify-center">
+                <Thumbnail url={slotUrls[1]} index={1} matched={!!deviceId} />
+                <Thumbnail url={slotUrls[2]} index={2} matched={!!deviceId} />
+              </div>
             </div>
           </div>
         </div>

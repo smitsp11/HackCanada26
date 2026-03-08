@@ -13,11 +13,11 @@ export default function Home() {
   const handleExecute = (finalSymptom: string) => {
     if (assets.length === 0 && !finalSymptom.trim()) return;
 
-    const slotOrder = ["company", "model", "additional", "video"] as const;
+    const slotOrder = ["model", "additional", "video"] as const;
     const urls = slotOrder.map((key) => {
       const match = assets.find((a) => a.slot === key);
       return match?.secure_url ?? "";
-    }) as [string, string, string, string];
+    }) as [string, string, string];
 
     sessionStorage.setItem(
       "opera-assets",

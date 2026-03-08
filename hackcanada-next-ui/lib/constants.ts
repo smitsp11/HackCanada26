@@ -23,6 +23,5 @@ export const IS_VISUAL_TEST_MODE =
 export const SLOT_LABELS = [
   "F R A M E _ 0 1",
   "F R A M E _ 0 2",
-  "F R A M E _ 0 3",
   "V I D E O",
 ] as const;

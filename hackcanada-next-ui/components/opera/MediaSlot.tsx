@@ -14,7 +14,7 @@ interface MediaSlotProps {
 }
 
 function SlotMedia({ index, url, className }: { index: number; url: string; className: string }) {
-  const isVideo = index === 3;
+  const isVideo = index === 2;
   if (isVideo) {
     return <video src={url} className={className} muted autoPlay loop playsInline />;
   }

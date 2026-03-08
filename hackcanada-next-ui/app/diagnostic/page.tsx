@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import OperaShell from "@/components/opera/OperaShell";
 
 interface OperaAssets {
-  urls: [string, string, string, string];
+  urls: [string, string, string];
   symptom: string;
 }
 

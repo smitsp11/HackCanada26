@@ -7,8 +7,8 @@ import TerminalLog from "./TerminalLog";
 import { TIMING, SLOT_LABELS } from "@/lib/constants";
 
 interface Phase1IngestionProps {
-  slots: [SlotStatus, SlotStatus, SlotStatus, SlotStatus];
-  slotUrls: [string | null, string | null, string | null, string | null];
+  slots: [SlotStatus, SlotStatus, SlotStatus];
+  slotUrls: [string | null, string | null, string | null];
   logs: string[];
 }
 
@@ -34,9 +34,9 @@ const slotVariants = {
   },
 };
 
-const SEGMENT_LABELS = ["FRAME_01", "FRAME_02", "FRAME_03", "VIDEO"];
+const SEGMENT_LABELS = ["FRAME_01", "FRAME_02", "VIDEO"];
 
-function IngestionProgress({ slots }: { slots: [SlotStatus, SlotStatus, SlotStatus, SlotStatus] }) {
+function IngestionProgress({ slots }: { slots: [SlotStatus, SlotStatus, SlotStatus] }) {
   const lockedCount = slots.filter((s) => s === "complete").length;
 
   return (
@@ -72,7 +72,7 @@ function IngestionProgress({ slots }: { slots: [SlotStatus, SlotStatus, SlotStat
         ))}
       </div>
       <span className="font-mono text-xs font-bold text-black/60 whitespace-nowrap">
-        {lockedCount} / 4&nbsp; LOCKED
+        {lockedCount} / 3&nbsp; LOCKED
       </span>
     </div>
   );
@@ -97,7 +97,7 @@ export default function Phase1Ingestion({
         </p>
       </div>
 
-      <motion.div className="grid grid-cols-4 gap-4" variants={containerVariants}>
+      <motion.div className="grid grid-cols-3 gap-4" variants={containerVariants}>
         {slots.map((status, i) => (
           <motion.div key={i} variants={slotVariants}>
             <MediaSlot

@@ -1,17 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useOperaReducer } from "@/hooks/useOperaReducer";
 import { useSSE } from "@/hooks/useSSE";
 import Phase1Ingestion from "./Phase1Ingestion";
-import TransitionCut from "./TransitionCut";
 import Phase2Cognitive from "./Phase2Cognitive";
 import Phase3Synthesis from "./Phase3Synthesis";
 import ResultPane from "./ResultPane";
 
 interface OperaShellProps {
-  assetUrls: [string, string, string, string];
+  assetUrls: [string, string, string];
   symptom: string;
 }
 
@@ -19,6 +18,7 @@ export default function OperaShell({ assetUrls, symptom }: OperaShellProps) {
   const [state, dispatch] = useOperaReducer();
   const [sseEnabled, setSSEEnabled] = useState(false);
   const started = useRef(false);
+  const advanceScheduled = useRef(false);
 
   useSSE({
     url: "/api/diagnose?urls=" + encodeURIComponent(JSON.stringify(assetUrls)),
@@ -33,9 +33,17 @@ export default function OperaShell({ assetUrls, symptom }: OperaShellProps) {
     setSSEEnabled(true);
   }, [dispatch]);
 
-  const handleCutComplete = useCallback(() => {
-    dispatch({ type: "CUT_COMPLETE" });
-  }, [dispatch]);
+  useEffect(() => {
+    const allComplete =
+      state.phase === "PHASE_1_INGESTION" &&
+      state.slots.every((s) => s === "complete");
+    if (!allComplete || advanceScheduled.current) return;
+    advanceScheduled.current = true;
+    const t = setTimeout(() => {
+      dispatch({ type: "ADVANCE_TO_PHASE_2" });
+    }, 800);
+    return () => clearTimeout(t);
+  }, [state.phase, state.slots, dispatch]);
 
   return (
     <div className="relative min-h-screen w-full">
@@ -75,6 +83,8 @@ export default function OperaShell({ assetUrls, symptom }: OperaShellProps) {
             key="complete"
             steps={state.repairSteps}
             logs={state.diagnosticLogs}
+            deviceId={state.deviceId}
+            symptom={symptom}
           />
         )}
 
@@ -101,12 +111,6 @@ export default function OperaShell({ assetUrls, symptom }: OperaShellProps) {
               </button>
             </div>
           </div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {state.phase === "TRANSITION_CUT" && (
-          <TransitionCut key="cut" onComplete={handleCutComplete} />
         )}
       </AnimatePresence>
     </div>

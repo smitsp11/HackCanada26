@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Phase 1: Slot processing
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 3; i++) {
         await delay(600);
         send({ type: "slot_processing", slotIndex: i });
         await delay(1200);

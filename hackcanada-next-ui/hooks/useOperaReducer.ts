@@ -16,8 +16,8 @@ export type SlotStatus = "idle" | "processing" | "complete";
 
 export interface OperaState {
   phase: Phase;
-  slots: [SlotStatus, SlotStatus, SlotStatus, SlotStatus];
-  slotUrls: [string | null, string | null, string | null, string | null];
+  slots: [SlotStatus, SlotStatus, SlotStatus];
+  slotUrls: [string | null, string | null, string | null];
   deviceId: string | null;
   manualMatch: { id: string; title: string } | null;
   synthesisProgress: number;
@@ -32,6 +32,7 @@ export type OperaAction =
   | { type: "SLOT_COMPLETE"; slotIndex: number; url: string }
   | { type: "ALL_SLOTS_DONE" }
   | { type: "CUT_COMPLETE" }
+  | { type: "ADVANCE_TO_PHASE_2" }
   | { type: "DEVICE_IDENTIFIED"; makeModel: string }
   | { type: "MANUAL_FOUND"; manualId: string; title: string }
   | { type: "MANUAL_RETRIEVED" }
@@ -43,8 +44,8 @@ export type OperaAction =
 
 const initialState: OperaState = {
   phase: "IDLE",
-  slots: ["idle", "idle", "idle", "idle"],
-  slotUrls: [null, null, null, null],
+  slots: ["idle", "idle", "idle"],
+  slotUrls: [null, null, null],
   deviceId: null,
   manualMatch: null,
   synthesisProgress: 0,
@@ -54,11 +55,11 @@ const initialState: OperaState = {
 };
 
 function updateSlot<T>(
-  arr: [T, T, T, T],
+  arr: [T, T, T],
   index: number,
   value: T
-): [T, T, T, T] {
-  const next = [...arr] as [T, T, T, T];
+): [T, T, T] {
+  const next = [...arr] as [T, T, T];
   next[index] = value;
   return next;
 }
@@ -94,14 +95,25 @@ function operaReducer(state: OperaState, action: OperaAction): OperaState {
           ...state.diagnosticLogs,
           `SLOT_${action.slotIndex}_LOCKED [OK]`,
         ],
-        phase: allDone ? "TRANSITION_CUT" : state.phase,
+        phase: state.phase,
       };
     }
 
     case "ALL_SLOTS_DONE":
-      return { ...state, phase: "TRANSITION_CUT" };
+      return { ...state, phase: "PHASE_2_COGNITIVE" };
 
     case "CUT_COMPLETE":
+      return {
+        ...state,
+        phase: "PHASE_2_COGNITIVE",
+        diagnosticLogs: [
+          ...state.diagnosticLogs,
+          "COGNITIVE_ENGINE_ONLINE",
+          "SCANNING_DEVICE_SIGNATURE...",
+        ],
+      };
+
+    case "ADVANCE_TO_PHASE_2":
       return {
         ...state,
         phase: "PHASE_2_COGNITIVE",

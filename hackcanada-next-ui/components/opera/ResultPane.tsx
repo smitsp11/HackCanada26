@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { RepairStep } from "@/lib/events";
 import { TIMING } from "@/lib/constants";
@@ -7,6 +9,8 @@ import { TIMING } from "@/lib/constants";
 interface ResultPaneProps {
   steps: RepairStep[];
   logs: string[];
+  deviceId?: string | null;
+  symptom?: string;
 }
 
 const stepsContainerVariants = {
@@ -27,9 +31,23 @@ const stepVariants = {
   },
 };
 
-export default function ResultPane({ steps, logs }: ResultPaneProps) {
+export default function ResultPane({ steps, logs, deviceId, symptom }: ResultPaneProps) {
+  const router = useRouter();
+  const [animationsComplete, setAnimationsComplete] = useState(false);
   const stepsWithSchematics = steps.filter((s) => s.schematicUrl);
   const allSteps = steps;
+
+  const handleBegin = () => {
+    sessionStorage.setItem(
+      "opera-steps",
+      JSON.stringify({
+        steps,
+        equipment: deviceId ?? "Device",
+        fault: symptom ?? "Repair required",
+      })
+    );
+    router.push("/steps");
+  };
 
   return (
     <motion.div
@@ -56,6 +74,7 @@ export default function ResultPane({ steps, logs }: ResultPaneProps) {
           variants={stepsContainerVariants}
           initial="hidden"
           animate="visible"
+          onAnimationComplete={() => setAnimationsComplete(true)}
           className="space-y-4"
         >
           {allSteps.map((step) => (
@@ -125,6 +144,22 @@ export default function ResultPane({ steps, logs }: ResultPaneProps) {
           </div>
         )}
       </motion.div>
+
+      {animationsComplete && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="fixed bottom-6 right-8"
+        >
+          <button
+            onClick={handleBegin}
+            className="border-2 border-black bg-white px-6 py-3 font-mono text-sm font-bold tracking-[0.2em] uppercase shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_var(--color-brand)] transition-shadow duration-200"
+          >
+            Begin
+          </button>
+        </motion.div>
+      )}
     </motion.div>
   );
 }
