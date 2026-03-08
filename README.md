@@ -4,20 +4,6 @@
 
 ---
 
-## Pitch
-
-<!-- Replace with your four-sentence pitch -->
-
-*[Sentence 1: The problem you're solving.]*
-
-*[Sentence 2: Why it matters / who it's for.]*
-
-*[Sentence 3: How Opera AI solves it—your approach.]*
-
-*[Sentence 4: What you built / what's next.]*
-
----
-
 ## How It Works
 
 1. **Ingest** — Upload model photos, a supplementary image, and optional video. Cloudinary enhances and stores the media.
