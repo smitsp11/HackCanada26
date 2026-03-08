@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #ffffff;
+  --color-foreground: #000000;
+  --color-gray-light: #e5e5e5;
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+  --shadow-opera: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+}
+
+* {
+  border-radius: 0 !important;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 39px,
+      var(--color-gray-light) 39px,
+      var(--color-gray-light) 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 39px,
+      var(--color-gray-light) 39px,
+      var(--color-gray-light) 40px
+    );
+}
+
+.opera-shadow {
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.opera-border {
+  border: 1px solid #000;
+}
+
+.opera-label {
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+@keyframes scanSweep {
+  0% {
+    top: 0%;
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+@keyframes waveformDraw {
+  0% {
+    stroke-dashoffset: 600;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

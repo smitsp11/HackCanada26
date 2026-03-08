@@ -1,0 +1,51 @@
+---
+description: Control animation choices for OPERA phase transitions and live diagnostic UI
+globs: app/**/*.{ts,tsx} components/**/*.{ts,tsx} hooks/**/*.ts lib/**/*.ts
+alwaysApply: false
+---
+
+# OPERA animation rules
+
+## Purpose
+Keep motion disciplined, readable, and tied to system state.
+
+## Animation hierarchy
+- Use Framer Motion as the default animation system for state-driven UI transitions.
+- Use CSS animations for lightweight looping decorative effects like scanner sweeps, blinking cursors, grid pulses, or waveform drawing.
+- Use GSAP only when a text-specific effect is clearly worth the added complexity and cannot be implemented cleanly with Motion or React state.
+- Avoid mixing Motion and GSAP on the same element.
+
+## Motion principles
+- Every major animation must communicate state, progress, transition, or causality.
+- Prefer fast, sharp, deliberate motion over playful or floaty motion.
+- Keep transitions short and purposeful.
+- Use stagger only when it improves comprehension of sequence.
+- Use layout animations for components that move between phases, such as media slots shrinking into a reference strip.
+- Use AnimatePresence for mount/unmount transitions like overlays, blackout cuts, drawers, or result panes.
+
+## Performance rules
+- Favor transform and opacity over layout-thrashing properties when possible.
+- Avoid many simultaneous continuous animations in one viewport region.
+- Stop or unmount looping effects as soon as the related task completes.
+- Keep animation logic local and predictable.
+
+## Accessibility
+- Respect reduced-motion preferences.
+- Provide non-motion cues for important state changes.
+- Do not make critical information dependent on animation timing alone.
+
+## OPERA-specific guidance
+- Phase changes should feel like machine state transitions, not playful page animations.
+- The blackout cut must be brief, intentional, and deterministic.
+- Progress visuals must reflect actual backend state whenever possible.
+- Do not fake long sequences with arbitrary timers if real event data exists.
+
+## Do
+- Tie animations to reducer state or streamed events.
+- Use motion to clarify sequence, locking, matching, and reveal.
+- Keep visual rhythm crisp and industrial.
+
+## Do not
+- Do not add decorative motion that competes with logs or diagnostic output.
+- Do not use bouncy consumer-app transitions unless explicitly requested.
+- Do not let looping effects continue after completion.
