@@ -6,7 +6,7 @@ export function Header({ view, onAbort }: { view: "input" | "diagnostic"; onAbor
           className="text-4xl sm:text-5xl font-black tracking-tighter leading-none cursor-pointer hover:text-brand transition-colors" 
           onClick={onAbort}
         >
-          OPERA
+          Opera AI
         </h1>
         <span className="font-mono text-xs tracking-widest text-brand font-bold uppercase hidden sm:inline-block">
           {view === "input" ? "Hardware Diagnostic Engine" : "Active Repair Sequence"}
@@ -14,7 +14,7 @@ export function Header({ view, onAbort }: { view: "input" | "diagnostic"; onAbor
       </div>
       {view === "diagnostic" && (
         <button onClick={onAbort} className="font-mono text-xs font-bold uppercase tracking-widest text-black/50 hover:text-black">
-          [ ABORT / RESTART ]
+          [ RESTART ]
         </button>
       )}
     </header>

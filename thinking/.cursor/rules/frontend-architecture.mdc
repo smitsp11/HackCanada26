@@ -1,0 +1,55 @@
+---
+description: Enforce frontend architecture for phased SSE-driven diagnostic interfaces
+globs: app/**/*.{ts,tsx} components/**/*.{ts,tsx} hooks/**/*.ts lib/**/*.ts
+alwaysApply: false
+---
+
+# OPERA frontend architecture
+
+## Purpose
+Keep the UI deterministic, event-driven, and easy to extend.
+
+## State model
+- Model the app as a finite state machine or reducer-based flow.
+- Use explicit top-level states such as IDLE, PHASE_1_INGESTION, TRANSITION_CUT, PHASE_2_COGNITIVE, PHASE_3_SYNTHESIS, COMPLETE, ERROR, and RECONNECTING when relevant.
+- Derive UI from typed state and streamed backend events, not from scattered booleans.
+- Prefer explicit event names and payload shapes.
+
+## Event-driven design
+- Backend progress should arrive through a structured stream such as SSE.
+- Define a canonical event contract in one shared location.
+- UI components should react to event data rather than guessing timing.
+- Avoid hardcoded fake delays except for intentionally theatrical transitions like the blackout cut.
+
+## File boundaries
+- Keep orchestration logic in page-level containers, hooks, reducers, or lib modules.
+- Keep phase components focused on presentation and local visual behavior.
+- Separate stream handling, reducer logic, event typing, and UI rendering.
+- Reuse shared primitives for terminal logs, reference strips, progress bars, overlays, and result panels.
+
+## Component rules
+- Build components around clear responsibilities.
+- Prefer composition over giant all-in-one files.
+- Keep leaf animation components free of backend logic.
+- Pass data in a typed, minimal form.
+
+## Data and typing
+- Use TypeScript types for all events, reducer actions, and phase data.
+- Validate assumptions about nullable or delayed data.
+- Treat loading, partial, success, and failure as first-class states.
+
+## Reliability
+- Handle disconnects, retries, partial completion, and backend failure states explicitly.
+- Never assume SSE arrives in a perfect order without guards.
+- Preserve enough state for UI continuity during reconnects when possible.
+
+## Do
+- Centralize reducer logic.
+- Centralize event typing.
+- Build deterministic rendering paths from state to UI.
+- Keep each phase independently testable.
+
+## Do not
+- Do not spread flow logic across many components.
+- Do not encode app state in animation flags alone.
+- Do not let presentational components fetch or orchestrate backend processes directly.

@@ -5,7 +5,7 @@ export function Footer() {
         SYS.STATUS: ONLINE // RAG ENGINE ACTIVE
       </span>
       <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-black/40">
-        WATERLOO, ON
+        Canada 🍁
       </span>
     </footer>
   );
