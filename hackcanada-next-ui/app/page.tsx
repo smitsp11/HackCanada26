@@ -27,6 +27,11 @@ export default function Home() {
     router.push("/diagnostic");
   };
 
+  const handleRunDemo = () => {
+    sessionStorage.removeItem("opera-assets");
+    router.push("/diagnostic");
+  };
+
   return (
     <div className="h-screen bg-transparent text-black font-sans flex flex-col overflow-hidden">
       <Header view="input" onAbort={() => {}} />
@@ -34,6 +39,7 @@ export default function Home() {
       <InputScreen
         setAssets={setAssets}
         onExecute={handleExecute}
+        onRunDemo={handleRunDemo}
       />
 
       <Footer />

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import OperaShell from "@/components/opera/OperaShell";
+import { DEMO_ASSET_URLS, DEFAULT_DEMO_SYMPTOM } from "@/lib/demo-assets";
 
 interface OperaAssets {
   urls: [string, string, string];
@@ -10,16 +11,25 @@ interface OperaAssets {
 
 export default function DiagnosticPage() {
   const [assets, setAssets] = useState<OperaAssets | null>(null);
+  const [useDemoAssets, setUseDemoAssets] = useState(false);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("opera-assets");
     if (raw) {
       try {
-        setAssets(JSON.parse(raw));
+        const parsed = JSON.parse(raw);
+        setAssets(parsed);
+        setUseDemoAssets(false);
+        return;
       } catch {
         /* malformed – ignore */
       }
     }
+    setAssets({
+      urls: [...DEMO_ASSET_URLS],
+      symptom: DEFAULT_DEMO_SYMPTOM,
+    });
+    setUseDemoAssets(true);
   }, []);
 
   if (!assets) {
@@ -32,7 +42,11 @@ export default function DiagnosticPage() {
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden">
-      <OperaShell assetUrls={assets.urls} symptom={assets.symptom} />
+      <OperaShell
+        assetUrls={assets.urls}
+        symptom={assets.symptom}
+        useDemoAssets={useDemoAssets}
+      />
     </main>
   );
 }

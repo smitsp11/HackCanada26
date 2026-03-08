@@ -38,14 +38,14 @@ export async function GET(request: NextRequest) {
       await delay(2000);
       send({
         type: "device_identified",
-        makeModel: "BOSCH_SERIE_6_SMS6ZDW48G",
+        makeModel: "Comfort™ 96 Condensing Gas Furnace",
       });
 
       await delay(1500);
       send({
         type: "manual_found",
-        manualId: "BOSCH-SMS6Z-MANUAL-2024",
-        title: "Bosch Serie 6 SMS6ZDW48G Service Manual",
+        manualId: "59SC6A060M17--16",
+        title: "Carrier Comfort™ 96 Condensing Gas Furnace Service Manual",
       });
 
       // Phase 3: Synthesis

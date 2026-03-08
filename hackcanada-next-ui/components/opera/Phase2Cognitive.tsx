@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import TerminalLog from "./TerminalLog";
 import ScrambledText from "@/components/ui/ScrambledText";
+import { getDemoEnhancedUrls } from "@/lib/demo-enhanced-urls";
+import { getEnhancedSlotUrls } from "@/lib/cloudinary-enhance";
 
 interface Phase2CognitiveProps {
   slotUrls: [string | null, string | null, string | null];
+  useDemoAssets?: boolean;
   deviceId: string | null;
   manualMatch: { id: string; title: string } | null;
   logs: string[];
@@ -35,12 +38,18 @@ function Thumbnail({ url, index, matched }: { url: string | null; index: number;
 
 export default function Phase2Cognitive({
   slotUrls,
+  useDemoAssets = false,
   deviceId,
   manualMatch,
   logs,
   onManualReady,
 }: Phase2CognitiveProps) {
   const hasTriggeredRef = useRef(false);
+
+  const displayUrls = useMemo(() => {
+    if (useDemoAssets) return getDemoEnhancedUrls();
+    return getEnhancedSlotUrls(slotUrls);
+  }, [useDemoAssets, slotUrls]);
 
   useEffect(() => {
     if (manualMatch && !hasTriggeredRef.current) {
@@ -94,11 +103,11 @@ export default function Phase2Cognitive({
 
             <div className="flex flex-col items-center gap-1.5 shrink-0">
               <div className="flex justify-center">
-                <Thumbnail url={slotUrls[0]} index={0} matched={!!deviceId} />
+                <Thumbnail url={displayUrls[0]} index={0} matched={!!deviceId} />
               </div>
               <div className="flex gap-1.5 justify-center">
-                <Thumbnail url={slotUrls[1]} index={1} matched={!!deviceId} />
-                <Thumbnail url={slotUrls[2]} index={2} matched={!!deviceId} />
+                <Thumbnail url={displayUrls[1]} index={1} matched={!!deviceId} />
+                <Thumbnail url={displayUrls[2]} index={2} matched={!!deviceId} />
               </div>
             </div>
           </div>

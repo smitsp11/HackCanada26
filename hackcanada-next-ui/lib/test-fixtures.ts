@@ -134,12 +134,12 @@ const stateMap: Record<OperaTestStateKey, OperaState> = {
     phase: "PHASE_2_COGNITIVE",
     slots: ["complete", "complete", "complete", "complete"],
     slotUrls,
-    deviceId: "BOSCH_SERIE_6_SMS6ZDW48G",
+    deviceId: "Comfort™ 96 Condensing Gas Furnace",
     manualMatch: {
-      id: "BOSCH-SMS6Z-MANUAL-2024",
-      title: "Bosch Serie 6 SMS6ZDW48G Service Manual",
+      id: "59SC6A060M17--16",
+      title: "Carrier Comfort™ 96 Condensing Gas Furnace Service Manual",
     },
-    diagnosticLogs: [...baseLogs, "MATCH_FOUND: BOSCH_SERIE_6_SMS6ZDW48G"],
+    diagnosticLogs: [...baseLogs, "MATCH_FOUND: Comfort™ 96 Condensing Gas Furnace"],
   },
   "phase3-0": {
     ...baseState,

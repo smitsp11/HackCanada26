@@ -12,9 +12,10 @@ import ResultPane from "./ResultPane";
 interface OperaShellProps {
   assetUrls: [string, string, string];
   symptom: string;
+  useDemoAssets?: boolean;
 }
 
-export default function OperaShell({ assetUrls, symptom }: OperaShellProps) {
+export default function OperaShell({ assetUrls, symptom, useDemoAssets = false }: OperaShellProps) {
   const [state, dispatch] = useOperaReducer();
   const [sseEnabled, setSSEEnabled] = useState(false);
   const started = useRef(false);
@@ -61,6 +62,7 @@ export default function OperaShell({ assetUrls, symptom }: OperaShellProps) {
           <Phase2Cognitive
             key="phase2"
             slotUrls={state.slotUrls}
+            useDemoAssets={useDemoAssets}
             deviceId={state.deviceId}
             manualMatch={state.manualMatch}
             logs={state.diagnosticLogs}

@@ -11,7 +11,7 @@ const SLOTS: { key: SlotKey; label: string; icon: string }[] = [
   { key: "video", label: "Video File", icon: "" },
 ];
 
-export function InputScreen({ setAssets, onExecute }: any) {
+export function InputScreen({ setAssets, onExecute, onRunDemo }: any) {
   const [localSymptom, setLocalSymptom] = useState("");
   const [slots, setSlots] = useState<Record<SlotKey, CloudinaryUploadResult | null>>({
     model: null,
@@ -129,13 +129,24 @@ export function InputScreen({ setAssets, onExecute }: any) {
               className="w-full bg-studio text-black text-base leading-relaxed placeholder-black/40 outline-none resize-none border-2 border-transparent focus:border-brand p-5 font-mono transition-colors min-h-[112px]"
             />
 
-            <button
-              onClick={triggerExecute}
-              disabled={!canExecute}
-              className="w-full py-4 bg-black text-white font-mono text-sm font-bold tracking-[0.2em] uppercase border-2 border-black cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed enabled:hover:bg-brand enabled:hover:border-brand transition-colors duration-200"
-            >
-              Execute Diagnostic
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={triggerExecute}
+                disabled={!canExecute}
+                className="w-full py-4 bg-black text-white font-mono text-sm font-bold tracking-[0.2em] uppercase border-2 border-black cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed enabled:hover:bg-brand enabled:hover:border-brand transition-colors duration-200"
+              >
+                Execute Diagnostic
+              </button>
+              {onRunDemo && (
+                <button
+                  type="button"
+                  onClick={onRunDemo}
+                  className="w-full py-3 border-2 border-black/30 font-mono text-xs font-bold tracking-[0.2em] uppercase text-black/60 hover:border-brand hover:text-brand transition-colors duration-200"
+                >
+                  Run Demo
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
