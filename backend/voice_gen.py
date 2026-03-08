@@ -17,8 +17,10 @@ client = ElevenLabs(
 
 def generate_step_audio(steps_data: list, output_dir: str = "assets/audio/steps"):
     """
-    Takes the JSON 'repair_steps' and generates an MP3 for each one.
-    Returns a dictionary mapping step numbers to their local file paths.
+    Generates an MP3 for each repair step.
+    FRONTEND LINK: The API will return the local paths to these MP3s. 
+    The frontend should pre-load them and use the Web Speech API to listen 
+    for the word "Next" to trigger the next file in the sequence.
     """
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
@@ -39,7 +41,7 @@ def generate_step_audio(steps_data: list, output_dir: str = "assets/audio/steps"
         try:
             audio_stream = client.text_to_speech.convert(
                 text=script,
-                voice_id="nPczCjzI2devNBz1zQrb", # Brian (Professional Tech Voice)
+                voice_id="nPczCjzI2devNBz1zQrb", # Brian
                 model_id="eleven_multilingual_v2",
                 output_format="mp3_44100_128"
             )
@@ -52,8 +54,7 @@ def generate_step_audio(steps_data: list, output_dir: str = "assets/audio/steps"
                     if chunk:
                         f.write(chunk)
             
-            print(f"  -> Saved: {file_path}")
-            audio_map[step_num] = file_path
+            audio_map[step_num] = f"/{file_path}" 
             
         except httpx.TimeoutException:
             print(f"[ERROR] Step {step_num} failed: Network timeout.")
@@ -63,12 +64,11 @@ def generate_step_audio(steps_data: list, output_dir: str = "assets/audio/steps"
     return audio_map
 
 if __name__ == "__main__":
-    print("--- ELEVENLABS AUDIO GENERATOR ---")
+    # --- FRONTEND / INTEGRATION COMMENTS ---
+    # REPLACE THIS MOCK DATA when integrating. 
+    # In production, `mock_steps` will be replaced by the output of `generate_ikea_steps()` 
+    # from your instr_gen.py file. See main.py for the actual implementation.
     mock_steps = [
-        {
-            "step": 1, 
-            "action": "Ensure the furnace is completely powered down.", 
-            "caution": "High voltage can be fatal."
-        }
+        {"step": 1, "action": "Turn off power.", "caution": "High voltage."}
     ]
     generate_step_audio(mock_steps)
