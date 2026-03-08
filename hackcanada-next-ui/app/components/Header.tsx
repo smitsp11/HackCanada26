@@ -9,7 +9,7 @@ export function Header({ view, onAbort }: { view: "input" | "diagnostic"; onAbor
           OPERA
         </h1>
         <span className="font-mono text-xs tracking-widest text-brand font-bold uppercase hidden sm:inline-block">
-          {view === "input" ? "Diagnostic Engine v2.0" : "Active Repair Sequence"}
+          {view === "input" ? "Hardware Diagnostic Engine" : "Active Repair Sequence"}
         </span>
       </div>
       {view === "diagnostic" && (
