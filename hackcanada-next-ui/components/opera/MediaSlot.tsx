@@ -63,7 +63,7 @@ export default function MediaSlot({
         </span>
       )}
 
-      <ScannerSweep active={isScanning} />
+      <ScannerSweep active={isScanning} speedMultiplier={index === 2 ? 0.8 : 1} />
 
       {isScanning && !IS_VISUAL_TEST_MODE && (
         <Noise

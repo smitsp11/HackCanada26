@@ -57,6 +57,19 @@ export function useSSE({ url, enabled, dispatch }: UseSSEOptions) {
             title: parsed.title,
           });
           break;
+        case "symptom_sections_found":
+          dispatch({
+            type: "SYMPTOM_SECTIONS_FOUND",
+            symptom: parsed.symptom,
+            sections: parsed.sections,
+          });
+          break;
+        case "parts_check_complete":
+          dispatch({
+            type: "PARTS_CHECK_COMPLETE",
+            parts: parsed.parts,
+          });
+          break;
         case "synthesis_progress":
           dispatch({
             type: "SYNTHESIS_PROGRESS",

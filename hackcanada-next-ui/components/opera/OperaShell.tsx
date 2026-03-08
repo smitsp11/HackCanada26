@@ -22,7 +22,7 @@ export default function OperaShell({ assetUrls, symptom, useDemoAssets = false }
   const advanceScheduled = useRef(false);
 
   useSSE({
-    url: "/api/diagnose?urls=" + encodeURIComponent(JSON.stringify(assetUrls)),
+    url: "/api/diagnose?urls=" + encodeURIComponent(JSON.stringify(assetUrls)) + "&symptom=" + encodeURIComponent(symptom),
     enabled: sseEnabled,
     dispatch,
   });
@@ -42,7 +42,7 @@ export default function OperaShell({ assetUrls, symptom, useDemoAssets = false }
     advanceScheduled.current = true;
     const t = setTimeout(() => {
       dispatch({ type: "ADVANCE_TO_PHASE_2" });
-    }, 800);
+    }, 4500);
     return () => clearTimeout(t);
   }, [state.phase, state.slots, dispatch]);
 
@@ -65,6 +65,8 @@ export default function OperaShell({ assetUrls, symptom, useDemoAssets = false }
             useDemoAssets={useDemoAssets}
             deviceId={state.deviceId}
             manualMatch={state.manualMatch}
+            symptomSections={state.symptomSections}
+            partsCheck={state.partsCheck}
             logs={state.diagnosticLogs}
             onManualReady={() => {
               dispatch({ type: "MANUAL_RETRIEVED" });

@@ -14,7 +14,7 @@ export function Header({ view, onAbort }: { view: "input" | "diagnostic"; onAbor
       </div>
       {view === "diagnostic" && (
         <button onClick={onAbort} className="font-mono text-xs font-bold uppercase tracking-widest text-black/50 hover:text-black">
-          [ ABORT / RESTART ]
+          [ RESTART ]
         </button>
       )}
     </header>

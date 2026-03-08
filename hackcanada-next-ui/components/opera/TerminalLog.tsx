@@ -5,9 +5,10 @@ import DecryptedText from "@/components/ui/DecryptedText";
 
 interface TerminalLogProps {
   logs: string[];
+  speedMultiplier?: number;
 }
 
-export default function TerminalLog({ logs }: TerminalLogProps) {
+export default function TerminalLog({ logs, speedMultiplier = 1 }: TerminalLogProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,7 +31,7 @@ export default function TerminalLog({ logs }: TerminalLogProps) {
             text={log}
             animateOn="view"
             sequential
-            speed={30}
+            speed={speedMultiplier !== 1 ? 30 / speedMultiplier : 30}
             characters="0123456789ABCDEF_."
             className="text-black"
             encryptedClassName="text-black/30"
