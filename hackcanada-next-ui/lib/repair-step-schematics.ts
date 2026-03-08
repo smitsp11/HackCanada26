@@ -8,16 +8,16 @@
 import type { RepairStep } from "./events";
 
 export const REPAIR_STEP_SCHEMATICS: Record<number, string> = {
-  1: "/schematics/step01_power_gas_off.png",
-  2: "/schematics/step02_remove_control_door.png",
-  3: "/schematics/step03_disconnect_igniter_harness.png",
-  4: "/schematics/step04_check_igniter_resistance.png",
-  5: "/schematics/step05_remove_igniter_bracket.png",
-  6: "/schematics/step06_replace_igniter_assembly.png",
-  7: "/schematics/step07_reconnect_igniter_harness.png",
-  8: "/schematics/step08_turn_on_power_gas.png",
-  9: "/schematics/step09_verify_igniter_operation.png",
-  10: "/schematics/step10_replace_control_door.png",
+  1: "/schematics/fig1.png",
+  2: "/schematics/fig2.png",
+  3: "/schematics/fig3.png",
+  4: "/schematics/fig4.png",
+  5: "/schematics/fig5.png",
+  6: "/schematics/fig6.png",
+  7: "/schematics/fig7.png",
+  8: "/schematics/fig8.png",
+  9: "/schematics/fig9.png",
+  10: "/schematics/fig10.png",
 };
 
 export function getSchematicUrlForStep(id: number): string | null {

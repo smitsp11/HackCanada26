@@ -51,7 +51,7 @@ export default function UploadPrompt({ onUpload }: UploadPromptProps) {
     >
       <div className="mb-12">
         <h1 className="text-center font-sans text-6xl font-black tracking-tighter text-black">
-          OPERA
+          Opera AI
         </h1>
         <p className="opera-label mt-4 text-center text-black/60">
           D I A G N O S T I C &nbsp; I N T E R F A C E

@@ -14,7 +14,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OPERA - Diagnostic Engine",
+  title: "Opera AI - Diagnostic Engine",
   description: "Cloudinary-powered diagnostic UI",
 };
 
