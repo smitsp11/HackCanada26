@@ -168,12 +168,12 @@ export async function localizePart(args: {
     return { found: false };
   }
 
-  const parsedPixelBox = box2dToPixels(parsed.box2d, width, height);
+  const parsedPixelBox = box2dToPixels(parsed.box2d!, width, height);
 
   return {
     found: true,
     targetLabel: parsed.targetLabel ?? localizationPlan.targetLabel,
-    box2d: parsed.box2d,
+    box2d: parsed.box2d!,
     pixelBox: parsedPixelBox,
   };
 }
