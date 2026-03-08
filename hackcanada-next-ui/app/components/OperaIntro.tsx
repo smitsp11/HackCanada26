@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const LOGO = "Opera AI";
-const TYPE_DELAY_MS = 100;
+const TYPE_DELAY_MS = 125; /* 0.8× speed (100 / 0.8) */
 const POST_TYPE_PAUSE_MS = 400;
 
 export function OperaIntro({
@@ -39,6 +39,10 @@ export function OperaIntro({
     setPhase("done");
   };
 
+  const handleOverlayFadeComplete = () => {
+    onComplete();
+  };
+
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center bg-white"
@@ -53,7 +57,7 @@ export function OperaIntro({
         ease: "easeOut",
       }}
       onAnimationComplete={() => {
-        if (phase === "done") onComplete();
+        if (phase === "done") handleOverlayFadeComplete();
       }}
     >
       <AnimatePresence mode="wait">
@@ -75,7 +79,7 @@ export function OperaIntro({
                     x: 0,
                     y: 0,
                     transition: {
-                      duration: 0.6,
+                      duration: 0.857, /* 0.7× speed (0.6 / 0.7) */
                       ease: [0.25, 0.46, 0.45, 0.94],
                     },
                   }

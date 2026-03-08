@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { RepairStep } from "@/lib/events";
+import { PassbookStack, type StackLayout } from "./PassbookStack";
 import { TIMING } from "@/lib/constants";
 
 interface ResultPaneProps {
@@ -36,6 +37,10 @@ export default function ResultPane({ steps, logs, deviceId, symptom }: ResultPan
   const [animationsComplete, setAnimationsComplete] = useState(false);
   const stepsWithSchematics = steps.filter((s) => s.schematicUrl);
   const allSteps = steps;
+  const lastIndex = Math.max(0, stepsWithSchematics.length - 1);
+  const [topIndex, setTopIndex] = useState(0);
+  const stackLayout: StackLayout = "diagonal-fan";
+  const safeTopIndex = Math.min(topIndex, lastIndex);
 
   const handleBegin = () => {
     sessionStorage.setItem(
@@ -122,20 +127,12 @@ export default function ResultPane({ steps, logs, deviceId, symptom }: ResultPan
         </div>
 
         {stepsWithSchematics.length > 0 ? (
-          <div className="space-y-6">
-            {stepsWithSchematics.map((step) => (
-              <div key={step.id} className="border-2 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_var(--color-brand)] transition-shadow duration-300 bg-white p-4">
-                <p className="opera-label mb-2 text-black/40">
-                  S T E P &nbsp; {String(step.id).padStart(2, "0")}
-                </p>
-                <img
-                  src={step.schematicUrl!}
-                  alt={`Schematic for step ${step.id}`}
-                  className="h-auto w-full"
-                />
-              </div>
-            ))}
-          </div>
+          <PassbookStack
+            steps={stepsWithSchematics}
+            activeIndex={safeTopIndex}
+            onSelect={setTopIndex}
+            layout={stackLayout}
+          />
         ) : (
           <div className="flex h-48 items-center justify-center opera-border bg-white">
             <p className="font-mono text-xs text-black/30">

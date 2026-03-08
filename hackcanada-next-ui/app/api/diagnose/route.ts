@@ -7,6 +7,7 @@ function delay(ms: number) {
 
 export async function GET(request: NextRequest) {
   const rawUrls = request.nextUrl.searchParams.get("urls");
+  const symptom = request.nextUrl.searchParams.get("symptom") ?? "no heat";
   let assetUrls: string[] = [];
   try {
     if (rawUrls) assetUrls = JSON.parse(rawUrls);
@@ -47,6 +48,19 @@ export async function GET(request: NextRequest) {
         type: "manual_found",
         manualId: "59SC6A060M17--16",
         title: "Carrier Comfort™ 96 Condensing Gas Furnace Service Manual",
+      });
+
+      await delay(800);
+      send({
+        type: "symptom_sections_found",
+        symptom: symptom,
+        sections: "Troubleshooting (p.34) • Igniter & flame sensor (p.89) • Electrical wiring (p.102)",
+      });
+
+      await delay(900);
+      send({
+        type: "parts_check_complete",
+        parts: "Igniter HCAP2000 — In stock • Flame sensor 50-2307 — In stock • Inducer motor — 2-day delivery",
       });
 
       // Phase 3: Synthesis

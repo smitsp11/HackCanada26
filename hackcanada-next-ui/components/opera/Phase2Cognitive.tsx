@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
+
+const PHASE2_SPEED = 0.85; // multiply all durations by 1/PHASE2_SPEED
 import { motion, AnimatePresence } from "framer-motion";
 import TerminalLog from "./TerminalLog";
 import ScrambledText from "@/components/ui/ScrambledText";
@@ -12,6 +14,8 @@ interface Phase2CognitiveProps {
   useDemoAssets?: boolean;
   deviceId: string | null;
   manualMatch: { id: string; title: string } | null;
+  symptomSections: { symptom: string; sections: string } | null;
+  partsCheck: string | null;
   logs: string[];
   onManualReady: () => void;
 }
@@ -25,7 +29,7 @@ function Thumbnail({ url, index, matched }: { url: string | null; index: number;
         borderColor: matched ? "var(--color-brand)" : "rgba(0,0,0,0.2)",
         borderWidth: matched ? 2 : 1,
       }}
-      transition={{ duration: 0.4, delay: index * 0.1 }}
+      transition={{ duration: 0.4 / PHASE2_SPEED, delay: (index * 0.1) / PHASE2_SPEED }}
     >
       {url && (
         isVideo
@@ -41,6 +45,8 @@ export default function Phase2Cognitive({
   useDemoAssets = false,
   deviceId,
   manualMatch,
+  symptomSections,
+  partsCheck,
   logs,
   onManualReady,
 }: Phase2CognitiveProps) {
@@ -52,18 +58,18 @@ export default function Phase2Cognitive({
   }, [useDemoAssets, slotUrls]);
 
   useEffect(() => {
-    if (manualMatch && !hasTriggeredRef.current) {
+    if (partsCheck && !hasTriggeredRef.current) {
       hasTriggeredRef.current = true;
-      const timer = setTimeout(onManualReady, 1500);
+      const timer = setTimeout(onManualReady, 1000);
       return () => clearTimeout(timer);
     }
-  }, [manualMatch, onManualReady]);
+  }, [partsCheck, onManualReady]);
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.2 } }}
+      exit={{ opacity: 0, transition: { duration: 0.2 / PHASE2_SPEED } }}
       className="flex min-h-screen flex-col px-8 py-6"
     >
       <div className="mb-4">
@@ -91,8 +97,8 @@ export default function Phase2Cognitive({
               ) : (
                 <ScrambledText
                   radius={150}
-                  duration={1.2}
-                  speed={0.5}
+                  duration={1.2 / PHASE2_SPEED}
+                  speed={0.5 * PHASE2_SPEED}
                   scrambleChars=".:#@█░▒▓"
                   className="tracking-wide"
                 >
@@ -119,7 +125,7 @@ export default function Phase2Cognitive({
             <motion.div
               initial={{ scale: 1.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.3 / PHASE2_SPEED, ease: "easeOut" }}
               className="border-2 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_var(--color-brand)] transition-shadow duration-300 mb-8 w-full max-w-2xl bg-white p-8"
             >
               <p className="opera-label mb-2 text-black/40">
@@ -134,9 +140,47 @@ export default function Phase2Cognitive({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Symptom → Relevant sections */}
+        <AnimatePresence>
+          {symptomSections && (
+            <motion.div
+              initial={{ scale: 1.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3 / PHASE2_SPEED, ease: "easeOut" }}
+              className="border-2 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_var(--color-brand)] transition-shadow duration-300 mb-8 w-full max-w-2xl bg-white p-8"
+            >
+              <p className="opera-label mb-2 text-black/40">
+                S Y M P T O M &nbsp; → &nbsp; R E L E V A N T &nbsp; S E C T I O N S
+              </p>
+              <p className="font-mono text-sm font-bold text-black">
+                &quot;{symptomSections.symptom}&quot; &rarr; {symptomSections.sections}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Parts check */}
+        <AnimatePresence>
+          {partsCheck && (
+            <motion.div
+              initial={{ scale: 1.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3 / PHASE2_SPEED, ease: "easeOut" }}
+              className="border-2 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_var(--color-brand)] transition-shadow duration-300 mb-8 w-full max-w-2xl bg-white p-8"
+            >
+              <p className="opera-label mb-2 text-black/40">
+                P A R T S &nbsp; C H E C K
+              </p>
+              <p className="font-mono text-sm font-bold text-black">
+                {partsCheck}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      <TerminalLog logs={logs} />
+      <TerminalLog logs={logs} speedMultiplier={PHASE2_SPEED} />
     </motion.div>
   );
 }

@@ -9,6 +9,8 @@ export type SSEEvent =
   | { type: "slot_complete"; slotIndex: number; url: string }
   | { type: "device_identified"; makeModel: string }
   | { type: "manual_found"; manualId: string; title: string }
+  | { type: "symptom_sections_found"; symptom: string; sections: string }
+  | { type: "parts_check_complete"; parts: string }
   | { type: "synthesis_progress"; percent: number; log: string }
   | { type: "synthesis_complete"; steps: RepairStep[] }
   | { type: "error"; message: string };

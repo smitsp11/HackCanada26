@@ -20,6 +20,8 @@ export interface OperaState {
   slotUrls: [string | null, string | null, string | null];
   deviceId: string | null;
   manualMatch: { id: string; title: string } | null;
+  symptomSections: { symptom: string; sections: string } | null;
+  partsCheck: string | null;
   synthesisProgress: number;
   diagnosticLogs: string[];
   repairSteps: RepairStep[] | null;
@@ -35,6 +37,8 @@ export type OperaAction =
   | { type: "ADVANCE_TO_PHASE_2" }
   | { type: "DEVICE_IDENTIFIED"; makeModel: string }
   | { type: "MANUAL_FOUND"; manualId: string; title: string }
+  | { type: "SYMPTOM_SECTIONS_FOUND"; symptom: string; sections: string }
+  | { type: "PARTS_CHECK_COMPLETE"; parts: string }
   | { type: "MANUAL_RETRIEVED" }
   | { type: "SYNTHESIS_PROGRESS"; percent: number; log: string }
   | { type: "SYNTHESIS_COMPLETE"; steps: RepairStep[] }
@@ -48,6 +52,8 @@ const initialState: OperaState = {
   slotUrls: [null, null, null],
   deviceId: null,
   manualMatch: null,
+  symptomSections: null,
+  partsCheck: null,
   synthesisProgress: 0,
   diagnosticLogs: [],
   repairSteps: null,
@@ -141,6 +147,26 @@ function operaReducer(state: OperaState, action: OperaAction): OperaState {
         diagnosticLogs: [
           ...state.diagnosticLogs,
           `MANUAL_RETRIEVED: ${action.title}`,
+        ],
+      };
+
+    case "SYMPTOM_SECTIONS_FOUND":
+      return {
+        ...state,
+        symptomSections: { symptom: action.symptom, sections: action.sections },
+        diagnosticLogs: [
+          ...state.diagnosticLogs,
+          `SYMPTOM_MATCHED: ${action.sections}`,
+        ],
+      };
+
+    case "PARTS_CHECK_COMPLETE":
+      return {
+        ...state,
+        partsCheck: action.parts,
+        diagnosticLogs: [
+          ...state.diagnosticLogs,
+          `PARTS_CHECK: ${action.parts}`,
         ],
       };
 

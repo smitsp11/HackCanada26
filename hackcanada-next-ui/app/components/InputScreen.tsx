@@ -8,10 +8,10 @@ type SlotKey = "model" | "additional" | "video";
 const SLOTS: { key: SlotKey; label: string; icon: string }[] = [
   { key: "model", label: "Model Number", icon: "[ 1 ]" },
   { key: "additional", label: "Additional", icon: "[ 2 ]" },
-  { key: "video", label: "Video File", icon: "" },
+  { key: "video", label: "Video", icon: "" },
 ];
 
-export function InputScreen({ setAssets, onExecute, onRunDemo }: any) {
+export function InputScreen({ setAssets, onExecute }: any) {
   const [localSymptom, setLocalSymptom] = useState("");
   const [slots, setSlots] = useState<Record<SlotKey, CloudinaryUploadResult | null>>({
     model: null,
@@ -64,7 +64,7 @@ export function InputScreen({ setAssets, onExecute, onRunDemo }: any) {
         <div className="flex flex-col border-2 border-black bg-white shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_var(--color-brand)] transition-shadow duration-300">
           <div className="px-7 pt-4 pb-3 flex items-center justify-between border-b-2 border-black bg-studio">
             <span className="font-mono text-[11px] font-bold tracking-[0.2em] uppercase text-black">
-              01 // Media Mounting
+              // Media Mounting
             </span>
             <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-brand font-bold">
               {filledCount} Mounted
@@ -117,7 +117,7 @@ export function InputScreen({ setAssets, onExecute, onRunDemo }: any) {
         <div className="flex flex-col border-2 border-black bg-white shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_var(--color-brand)] transition-shadow duration-300">
           <div className="px-7 pt-4 pb-3 border-b-2 border-black bg-studio flex items-center justify-between">
             <span className="font-mono text-[11px] font-bold tracking-[0.2em] uppercase text-black">
-              02 // Problem Definition
+              // Problem Definition
             </span>
           </div>
           <div className="flex flex-col p-6 gap-5">
@@ -137,15 +137,6 @@ export function InputScreen({ setAssets, onExecute, onRunDemo }: any) {
               >
                 Execute Diagnostic
               </button>
-              {onRunDemo && (
-                <button
-                  type="button"
-                  onClick={onRunDemo}
-                  className="w-full py-3 border-2 border-black/30 font-mono text-xs font-bold tracking-[0.2em] uppercase text-black/60 hover:border-brand hover:text-brand transition-colors duration-200"
-                >
-                  Run Demo
-                </button>
-              )}
             </div>
           </div>
         </div>
