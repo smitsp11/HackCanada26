@@ -6,7 +6,6 @@ import type { RepairStep } from "@/lib/events";
 export type Phase =
   | "IDLE"
   | "PHASE_1_INGESTION"
-  | "TRANSITION_CUT"
   | "PHASE_2_COGNITIVE"
   | "PHASE_3_SYNTHESIS"
   | "COMPLETE"
@@ -33,7 +32,6 @@ export type OperaAction =
   | { type: "SLOT_PROCESSING"; slotIndex: number }
   | { type: "SLOT_COMPLETE"; slotIndex: number; url: string }
   | { type: "ALL_SLOTS_DONE" }
-  | { type: "CUT_COMPLETE" }
   | { type: "ADVANCE_TO_PHASE_2" }
   | { type: "DEVICE_IDENTIFIED"; makeModel: string }
   | { type: "MANUAL_FOUND"; manualId: string; title: string }
@@ -107,17 +105,6 @@ function operaReducer(state: OperaState, action: OperaAction): OperaState {
 
     case "ALL_SLOTS_DONE":
       return { ...state, phase: "PHASE_2_COGNITIVE" };
-
-    case "CUT_COMPLETE":
-      return {
-        ...state,
-        phase: "PHASE_2_COGNITIVE",
-        diagnosticLogs: [
-          ...state.diagnosticLogs,
-          "COGNITIVE_ENGINE_ONLINE",
-          "SCANNING_DEVICE_SIGNATURE...",
-        ],
-      };
 
     case "ADVANCE_TO_PHASE_2":
       return {

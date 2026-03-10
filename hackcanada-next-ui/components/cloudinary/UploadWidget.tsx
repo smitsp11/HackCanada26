@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, type ReactNode } from "react";
-import { cloudName, uploadPreset } from "./config";
+import { cloudName, uploadPreset } from "@/lib/cloudinary-config";
 
 export interface CloudinaryUploadResult {
   public_id: string;
@@ -157,7 +157,7 @@ export function UploadWidget({
   if (!hasConfig) {
     return (
       <div className="font-mono text-[10px] uppercase tracking-widest text-black/50">
-        ERROR: CLOUDINARY CONFIG MISSING IN app/cloudinary/config.ts
+        ERROR: CLOUDINARY CONFIG MISSING
       </div>
     );
   }

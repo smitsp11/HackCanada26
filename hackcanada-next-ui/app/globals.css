@@ -31,20 +31,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-@keyframes grid-scroll {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 36px 36px;
-  }
-}
-
-#root {
-  width: 100%;
-  min-height: 100vh;
-}
-
 ::selection {
   background-color: var(--color-brand);
   color: var(--color-white);
@@ -78,15 +64,6 @@ textarea {
   }
   100% {
     top: 100%;
-  }
-}
-
-@keyframes waveformDraw {
-  0% {
-    stroke-dashoffset: 600;
-  }
-  100% {
-    stroke-dashoffset: 0;
   }
 }
 

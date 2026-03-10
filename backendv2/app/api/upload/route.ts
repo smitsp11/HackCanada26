@@ -49,13 +49,6 @@ export async function POST(req: NextRequest) {
       transformation: [LOCALIZE_TRANSFORMATION],
     });
 
-    console.log("[upload] original/localize dimensions:", {
-      originalWidth,
-      originalHeight,
-      localizeWidth,
-      localizeHeight,
-    });
-
     return NextResponse.json({
       publicId: result.public_id,
       secureUrl: result.secure_url,

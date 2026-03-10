@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { UploadWidget, type CloudinaryUploadResult } from "../cloudinary/UploadWidget";
+import { UploadWidget, type CloudinaryUploadResult } from "@/components/cloudinary/UploadWidget";
 
 type SlotKey = "model" | "additional" | "video";
 

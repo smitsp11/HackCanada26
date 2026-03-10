@@ -22,8 +22,6 @@ export async function POST(req: NextRequest) {
       pixelBox,
       overlayText
     );
-    console.log("[annotate] pixelBox used for localized derivative:", pixelBox);
-
     return NextResponse.json({ annotatedUrl });
   } catch (error) {
     console.error("annotate failed:", error);
