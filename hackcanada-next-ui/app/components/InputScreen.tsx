@@ -5,19 +5,38 @@ import { UploadWidget, type CloudinaryUploadResult } from "@/components/cloudina
 
 type SlotKey = "model" | "additional" | "video";
 
+export interface IdentifiedProduct {
+  product: {
+    id: number;
+    company: string;
+    model_number: string;
+    display_name: string | null;
+    product_type: string | null;
+  } | null;
+  source: "ocr" | "gemini" | "none";
+  parsedBrand?: string;
+  parsedModel?: string;
+}
+
 const SLOTS: { key: SlotKey; label: string; icon: string }[] = [
   { key: "model", label: "Model Number", icon: "[ 1 ]" },
   { key: "additional", label: "Additional", icon: "[ 2 ]" },
   { key: "video", label: "Video", icon: "" },
 ];
 
-export function InputScreen({ setAssets, onExecute }: any) {
+export function InputScreen({ setAssets, onExecute, onProductIdentified }: {
+  setAssets: (assets: any[]) => void;
+  onExecute: (symptom: string) => void;
+  onProductIdentified?: (result: IdentifiedProduct | null) => void;
+}) {
   const [localSymptom, setLocalSymptom] = useState("");
   const [slots, setSlots] = useState<Record<SlotKey, CloudinaryUploadResult | null>>({
     model: null,
     additional: null,
     video: null,
   });
+  const [identifyStatus, setIdentifyStatus] = useState<"idle" | "loading" | "done">("idle");
+  const [identified, setIdentified] = useState<IdentifiedProduct | null>(null);
 
   const syncAssets = useCallback((current: Record<SlotKey, CloudinaryUploadResult | null>) => {
     const built = Object.entries(current)
@@ -38,12 +57,37 @@ export function InputScreen({ setAssets, onExecute }: any) {
       syncAssets(next);
       return next;
     });
-  }, [syncAssets]);
+
+    if (slotKey === "model") {
+      setIdentifyStatus("loading");
+      setIdentified(null);
+      fetch("/api/identify-product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: result.secure_url }),
+      })
+        .then((res) => res.json())
+        .then((data: IdentifiedProduct) => {
+          setIdentified(data);
+          setIdentifyStatus("done");
+          onProductIdentified?.(data);
+        })
+        .catch(() => {
+          setIdentifyStatus("done");
+          onProductIdentified?.(null);
+        });
+    }
+  }, [syncAssets, onProductIdentified]);
 
   const removeSlot = (slotKey: SlotKey) => {
     const next = { ...slots, [slotKey]: null };
     setSlots(next);
     syncAssets(next);
+    if (slotKey === "model") {
+      setIdentified(null);
+      setIdentifyStatus("idle");
+      onProductIdentified?.(null);
+    }
   };
 
   const triggerExecute = () => onExecute(localSymptom);
@@ -113,6 +157,49 @@ export function InputScreen({ setAssets, onExecute }: any) {
               })}
             </div>
           </div>
+
+          {/* Product identification result */}
+          {identifyStatus === "loading" && (
+            <div className="px-5 pb-4">
+              <div className="flex items-center gap-2 py-2 px-3 bg-studio border border-black/10">
+                <span className="font-mono text-[10px] tracking-[0.15em] uppercase text-black/50 animate-pulse">
+                  Identifying product...
+                </span>
+              </div>
+            </div>
+          )}
+          {identifyStatus === "done" && identified && (
+            <div className="px-5 pb-4">
+              <div className="py-2 px-3 bg-studio border border-black/10">
+                {identified.product ? (
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-mono text-[10px] tracking-[0.15em] uppercase text-brand font-bold">
+                      Match: {identified.source.toUpperCase()}
+                    </span>
+                    <span className="font-mono text-xs text-black font-bold">
+                      {identified.product.company} &mdash; {identified.product.display_name || identified.product.model_number}
+                    </span>
+                    <span className="font-mono text-[10px] text-black/50">
+                      Model: {identified.product.model_number} | Type: {identified.product.product_type || "N/A"}
+                    </span>
+                  </div>
+                ) : identified.parsedBrand || identified.parsedModel ? (
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-mono text-[10px] tracking-[0.15em] uppercase text-black/50 font-bold">
+                      No DB match &mdash; detected:
+                    </span>
+                    <span className="font-mono text-xs text-black">
+                      {[identified.parsedBrand, identified.parsedModel].filter(Boolean).join(" / ")}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="font-mono text-[10px] tracking-[0.15em] uppercase text-black/40">
+                    Could not identify product
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* PROBLEM DEFINITION CARD */}

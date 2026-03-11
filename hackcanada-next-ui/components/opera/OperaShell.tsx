@@ -12,17 +12,18 @@ import ResultPane from "./ResultPane";
 interface OperaShellProps {
   assetUrls: [string, string, string];
   symptom: string;
+  makeModel?: string;
   useDemoAssets?: boolean;
 }
 
-export default function OperaShell({ assetUrls, symptom, useDemoAssets = false }: OperaShellProps) {
+export default function OperaShell({ assetUrls, symptom, makeModel, useDemoAssets = false }: OperaShellProps) {
   const [state, dispatch] = useOperaReducer();
   const [sseEnabled, setSSEEnabled] = useState(false);
   const started = useRef(false);
   const advanceScheduled = useRef(false);
 
   useSSE({
-    url: "/api/diagnose?urls=" + encodeURIComponent(JSON.stringify(assetUrls)) + "&symptom=" + encodeURIComponent(symptom),
+    url: "/api/diagnose?urls=" + encodeURIComponent(JSON.stringify(assetUrls)) + "&symptom=" + encodeURIComponent(symptom) + (makeModel ? "&makeModel=" + encodeURIComponent(makeModel) : ""),
     enabled: sseEnabled,
     dispatch,
   });

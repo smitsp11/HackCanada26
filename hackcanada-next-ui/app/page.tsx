@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
-import { InputScreen } from "./components/InputScreen";
+import { InputScreen, type IdentifiedProduct } from "./components/InputScreen";
 import { OperaIntro } from "./components/OperaIntro";
 
 const INTRO_SEEN_KEY = "opera-intro-seen";
@@ -13,6 +13,7 @@ export default function Home() {
   const router = useRouter();
   const [assets, setAssets] = useState<any[]>([]);
   const [showIntro, setShowIntro] = useState<boolean | null>(null);
+  const [identifiedProduct, setIdentifiedProduct] = useState<IdentifiedProduct | null>(null);
 
   useEffect(() => {
     setShowIntro(!sessionStorage.getItem(INTRO_SEEN_KEY));
@@ -23,6 +24,10 @@ export default function Home() {
     setShowIntro(false);
   };
 
+  const handleProductIdentified = useCallback((result: IdentifiedProduct | null) => {
+    setIdentifiedProduct(result);
+  }, []);
+
   const handleExecute = (finalSymptom: string) => {
     if (assets.length === 0 && !finalSymptom.trim()) return;
 
@@ -32,9 +37,15 @@ export default function Home() {
       return match?.secure_url ?? "";
     }) as [string, string, string];
 
+    const makeModel = identifiedProduct?.product
+      ? `${identifiedProduct.product.company} ${identifiedProduct.product.display_name || identifiedProduct.product.model_number}`
+      : identifiedProduct?.parsedBrand || identifiedProduct?.parsedModel
+        ? [identifiedProduct.parsedBrand, identifiedProduct.parsedModel].filter(Boolean).join(" ")
+        : undefined;
+
     sessionStorage.setItem(
       "opera-assets",
-      JSON.stringify({ urls, symptom: finalSymptom })
+      JSON.stringify({ urls, symptom: finalSymptom, makeModel })
     );
 
     router.push("/diagnostic");
@@ -48,6 +59,7 @@ export default function Home() {
       <InputScreen
         setAssets={setAssets}
         onExecute={handleExecute}
+        onProductIdentified={handleProductIdentified}
       />
 
       <Footer />

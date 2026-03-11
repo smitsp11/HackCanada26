@@ -8,6 +8,7 @@ function delay(ms: number) {
 export async function GET(request: NextRequest) {
   const rawUrls = request.nextUrl.searchParams.get("urls");
   const symptom = request.nextUrl.searchParams.get("symptom") ?? "no heat";
+  const makeModel = request.nextUrl.searchParams.get("makeModel") ?? "Comfort\u2122 96 Condensing Gas Furnace";
   let assetUrls: string[] = [];
   try {
     if (rawUrls) assetUrls = JSON.parse(rawUrls);
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
       await delay(2000);
       send({
         type: "device_identified",
-        makeModel: "Comfort™ 96 Condensing Gas Furnace",
+        makeModel,
       });
 
       await delay(1500);

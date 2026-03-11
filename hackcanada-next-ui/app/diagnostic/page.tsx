@@ -7,6 +7,7 @@ import { DEMO_ASSET_URLS, DEFAULT_DEMO_SYMPTOM } from "@/lib/demo-assets";
 interface OperaAssets {
   urls: [string, string, string];
   symptom: string;
+  makeModel?: string;
 }
 
 export default function DiagnosticPage() {
@@ -45,6 +46,7 @@ export default function DiagnosticPage() {
       <OperaShell
         assetUrls={assets.urls}
         symptom={assets.symptom}
+        makeModel={assets.makeModel}
         useDemoAssets={useDemoAssets}
       />
     </main>
