@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { UploadWidget, type CloudinaryUploadResult } from "@/components/cloudinary/UploadWidget";
 
 type SlotKey = "model" | "additional" | "video";
@@ -38,8 +38,8 @@ export function InputScreen({ setAssets, onExecute, onProductIdentified }: {
   const [identifyStatus, setIdentifyStatus] = useState<"idle" | "loading" | "done">("idle");
   const [identified, setIdentified] = useState<IdentifiedProduct | null>(null);
 
-  const syncAssets = useCallback((current: Record<SlotKey, CloudinaryUploadResult | null>) => {
-    const built = Object.entries(current)
+  useEffect(() => {
+    const built = Object.entries(slots)
       .filter(([, v]) => v !== null)
       .map(([key, v], i) => ({
         id: v!.public_id,
@@ -49,14 +49,10 @@ export function InputScreen({ setAssets, onExecute, onProductIdentified }: {
         figure: i + 1,
       }));
     setAssets(built);
-  }, [setAssets]);
+  }, [slots, setAssets]);
 
   const handleSlotUpload = useCallback((slotKey: SlotKey) => (result: CloudinaryUploadResult) => {
-    setSlots((prev) => {
-      const next = { ...prev, [slotKey]: result };
-      syncAssets(next);
-      return next;
-    });
+    setSlots((prev) => ({ ...prev, [slotKey]: result }));
 
     if (slotKey === "model") {
       setIdentifyStatus("loading");
@@ -77,12 +73,10 @@ export function InputScreen({ setAssets, onExecute, onProductIdentified }: {
           onProductIdentified?.(null);
         });
     }
-  }, [syncAssets, onProductIdentified]);
+  }, [onProductIdentified]);
 
   const removeSlot = (slotKey: SlotKey) => {
-    const next = { ...slots, [slotKey]: null };
-    setSlots(next);
-    syncAssets(next);
+    setSlots((prev) => ({ ...prev, [slotKey]: null }));
     if (slotKey === "model") {
       setIdentified(null);
       setIdentifyStatus("idle");
