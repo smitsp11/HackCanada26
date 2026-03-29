@@ -15,12 +15,42 @@ export type CaseStatus =
   | "preprocessing_failed"
   | "failed_validation";
 
+export type UnderstandingStage =
+  | "classify"
+  | "ocr"
+  | "extract"
+  | "symptoms"
+  | "fusion"
+  | "rank";
+
+export interface UnderstandingPayload {
+  case_id: string;
+  understanding_id: string;
+  appliance_type: {
+    top_prediction: string;
+    confidence: number;
+    alternatives: { label: string; confidence: number }[];
+  };
+  brand_candidates: { brand: string; confidence: number; evidence: string[] }[];
+  model_candidates: { model: string; confidence: number; rank: number; evidence: string[] }[];
+  error_codes: { value: string; confidence: number; source: string }[];
+  symptoms: { tag: string; confidence: number; source: string }[];
+  fallback_status: {
+    resolved_identity_level: string;
+    exact_model_resolved: boolean;
+    recommended_retrieval_scope: string[];
+  };
+}
+
 export type SSEEvent =
   | { type: "case_status"; status: CaseStatus }
   | { type: "preprocessing_progress"; total: number; done: number; ready: number; uploaded: number }
   | { type: "asset_preprocessed"; asset_id: string; slot_key: string; validation_status: string; processing_status: string }
   | { type: "slot_processing"; slotIndex: number }
   | { type: "slot_complete"; slotIndex: number; url: string }
+  | { type: "understanding_start" }
+  | { type: "understanding_progress"; stage: UnderstandingStage }
+  | { type: "understanding_complete"; payload: UnderstandingPayload }
   | { type: "device_identified"; makeModel: string }
   | { type: "manual_found"; manualId: string; title: string }
   | { type: "symptom_sections_found"; symptom: string; sections: string }

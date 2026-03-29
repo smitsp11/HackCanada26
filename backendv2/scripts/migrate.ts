@@ -174,7 +174,64 @@ async function migrate() {
       ON assets(checksum_sha256) WHERE checksum_sha256 IS NOT NULL;
   `);
 
-  console.log("Migration complete: all tables created (Phase A/B/C).");
+  // ── Multimodal Understanding Layer tables ──
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS observations (
+      observation_id TEXT PRIMARY KEY,
+      case_id TEXT NOT NULL REFERENCES cases(case_id) ON DELETE CASCADE,
+      asset_id TEXT REFERENCES assets(asset_id) ON DELETE SET NULL,
+      source_type TEXT NOT NULL,
+      field TEXT NOT NULL,
+      value TEXT NOT NULL,
+      confidence FLOAT NOT NULL DEFAULT 0,
+      region_type TEXT,
+      metadata JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_observations_case_id ON observations(case_id);
+  `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS identity_candidates (
+      candidate_id TEXT PRIMARY KEY,
+      case_id TEXT NOT NULL REFERENCES cases(case_id) ON DELETE CASCADE,
+      candidate_type TEXT NOT NULL,
+      value TEXT NOT NULL,
+      rank INTEGER NOT NULL DEFAULT 0,
+      confidence FLOAT NOT NULL DEFAULT 0,
+      supporting_obs_ids TEXT[],
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_identity_candidates_case_id ON identity_candidates(case_id);
+  `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS case_understanding (
+      understanding_id TEXT PRIMARY KEY,
+      case_id TEXT NOT NULL REFERENCES cases(case_id) ON DELETE CASCADE,
+      appliance_type_json JSONB,
+      brand_candidates_json JSONB,
+      model_candidates_json JSONB,
+      error_codes_json JSONB,
+      symptoms_json JSONB,
+      fallback_status_json JSONB,
+      resolved_identity_level TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_case_understanding_case_id ON case_understanding(case_id);
+  `);
+
+  console.log("Migration complete: all tables created (Phase A/B/C + Multimodal Understanding).");
   await client.end();
 }
 

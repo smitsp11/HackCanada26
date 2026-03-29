@@ -1,7 +1,7 @@
 "use client";
 
 import { useReducer } from "react";
-import type { RepairStep, CaseStatus } from "@/lib/events";
+import type { RepairStep, CaseStatus, UnderstandingPayload, UnderstandingStage } from "@/lib/events";
 
 export type Phase =
   | "IDLE"
@@ -19,6 +19,7 @@ export interface OperaState {
   slotUrls: [string | null, string | null, string | null];
   caseStatus: CaseStatus | null;
   preprocessingProgress: { total: number; done: number; ready: number } | null;
+  understanding: UnderstandingPayload | null;
   deviceId: string | null;
   manualMatch: { id: string; title: string } | null;
   symptomSections: { symptom: string; sections: string } | null;
@@ -38,6 +39,9 @@ export type OperaAction =
   | { type: "SLOT_COMPLETE"; slotIndex: number; url: string }
   | { type: "ALL_SLOTS_DONE" }
   | { type: "ADVANCE_TO_PHASE_2" }
+  | { type: "UNDERSTANDING_START" }
+  | { type: "UNDERSTANDING_PROGRESS"; stage: UnderstandingStage }
+  | { type: "UNDERSTANDING_COMPLETE"; payload: UnderstandingPayload }
   | { type: "DEVICE_IDENTIFIED"; makeModel: string }
   | { type: "MANUAL_FOUND"; manualId: string; title: string }
   | { type: "SYMPTOM_SECTIONS_FOUND"; symptom: string; sections: string }
@@ -55,6 +59,7 @@ const initialState: OperaState = {
   slotUrls: [null, null, null],
   caseStatus: null,
   preprocessingProgress: null,
+  understanding: null,
   deviceId: null,
   manualMatch: null,
   symptomSections: null,
@@ -161,6 +166,34 @@ function operaReducer(state: OperaState, action: OperaAction): OperaState {
           ...state.diagnosticLogs,
           "COGNITIVE_ENGINE_ONLINE",
           "SCANNING_DEVICE_SIGNATURE...",
+        ],
+      };
+
+    case "UNDERSTANDING_START":
+      return {
+        ...state,
+        diagnosticLogs: [
+          ...state.diagnosticLogs,
+          "MULTIMODAL_UNDERSTANDING_STARTED",
+        ],
+      };
+
+    case "UNDERSTANDING_PROGRESS":
+      return {
+        ...state,
+        diagnosticLogs: [
+          ...state.diagnosticLogs,
+          `UNDERSTANDING_STAGE: ${action.stage.toUpperCase()}`,
+        ],
+      };
+
+    case "UNDERSTANDING_COMPLETE":
+      return {
+        ...state,
+        understanding: action.payload,
+        diagnosticLogs: [
+          ...state.diagnosticLogs,
+          `UNDERSTANDING_COMPLETE: ${action.payload.fallback_status.resolved_identity_level}`,
         ],
       };
 
