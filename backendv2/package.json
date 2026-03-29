@@ -10,13 +10,16 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "self-test": "npx tsx scripts/self-test.ts"
+    "self-test": "npx tsx scripts/self-test.ts",
+    "eval": "npx tsx scripts/run-eval.ts",
+    "migrate": "npx tsx scripts/migrate.ts"
   },
   "dependencies": {
     "@google/genai": "^1.44.0",
     "@supabase/supabase-js": "^2.100.1",
     "cloudinary": "^2.9.0",
     "next": "16.1.6",
+    "onnxruntime-node": "^1.24.3",
     "pg": "^8.20.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",

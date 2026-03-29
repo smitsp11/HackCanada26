@@ -174,7 +174,148 @@ async function migrate() {
       ON assets(checksum_sha256) WHERE checksum_sha256 IS NOT NULL;
   `);
 
-  console.log("Migration complete: all tables created (Phase A/B/C).");
+  // Phase 2: Perceptual hash column for image dedup
+  await client.query(`
+    DO $$ BEGIN
+      ALTER TABLE assets ADD COLUMN phash TEXT;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END $$;
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_assets_phash
+      ON assets(phash) WHERE phash IS NOT NULL;
+  `);
+
+  // ── Multimodal Understanding Layer tables ──
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS observations (
+      observation_id TEXT PRIMARY KEY,
+      case_id TEXT NOT NULL REFERENCES cases(case_id) ON DELETE CASCADE,
+      asset_id TEXT REFERENCES assets(asset_id) ON DELETE SET NULL,
+      source_type TEXT NOT NULL,
+      field TEXT NOT NULL,
+      value TEXT NOT NULL,
+      confidence FLOAT NOT NULL DEFAULT 0,
+      region_type TEXT,
+      metadata JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_observations_case_id ON observations(case_id);
+  `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS identity_candidates (
+      candidate_id TEXT PRIMARY KEY,
+      case_id TEXT NOT NULL REFERENCES cases(case_id) ON DELETE CASCADE,
+      candidate_type TEXT NOT NULL,
+      value TEXT NOT NULL,
+      rank INTEGER NOT NULL DEFAULT 0,
+      confidence FLOAT NOT NULL DEFAULT 0,
+      supporting_obs_ids TEXT[],
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_identity_candidates_case_id ON identity_candidates(case_id);
+  `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS case_understanding (
+      understanding_id TEXT PRIMARY KEY,
+      case_id TEXT NOT NULL REFERENCES cases(case_id) ON DELETE CASCADE,
+      appliance_type_json JSONB,
+      brand_candidates_json JSONB,
+      model_candidates_json JSONB,
+      error_codes_json JSONB,
+      symptoms_json JSONB,
+      fallback_status_json JSONB,
+      resolved_identity_level TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_case_understanding_case_id ON case_understanding(case_id);
+  `);
+
+  // ── Phase 3: ML Training & Evaluation Infrastructure ──
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS training_labels (
+      label_id TEXT PRIMARY KEY,
+      case_id TEXT NOT NULL REFERENCES cases(case_id) ON DELETE CASCADE,
+      field TEXT NOT NULL,
+      verified_value TEXT NOT NULL,
+      labeler TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_training_labels_case_field
+      ON training_labels(case_id, field);
+  `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS model_registry (
+      model_id TEXT PRIMARY KEY,
+      model_name TEXT NOT NULL,
+      version TEXT NOT NULL,
+      onnx_path TEXT,
+      training_metrics JSONB,
+      is_active BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_model_registry_name_active
+      ON model_registry(model_name, is_active);
+  `);
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS eval_results (
+      eval_id TEXT PRIMARY KEY,
+      model_id TEXT NOT NULL REFERENCES model_registry(model_id) ON DELETE CASCADE,
+      dataset TEXT NOT NULL,
+      metrics JSONB NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_eval_results_model_id
+      ON eval_results(model_id);
+  `);
+
+  // Panel embedding column on products for panel-layout similarity
+  await client.query(`
+    DO $$ BEGIN
+      ALTER TABLE products ADD COLUMN panel_embedding FLOAT[];
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END $$;
+  `);
+
+  // Audio metadata columns on asset_metadata
+  for (const [col, typedef] of [
+    ["has_audio", "BOOLEAN DEFAULT false"],
+    ["audio_storage_uri", "TEXT"],
+  ] as const) {
+    await client.query(`
+      DO $$ BEGIN
+        ALTER TABLE asset_metadata ADD COLUMN ${col} ${typedef};
+      EXCEPTION WHEN duplicate_column THEN NULL;
+      END $$;
+    `);
+  }
+
+  console.log("Migration complete: all tables created (Phase A/B/C + Multimodal Understanding + Phase 3 ML).");
   await client.end();
 }
 

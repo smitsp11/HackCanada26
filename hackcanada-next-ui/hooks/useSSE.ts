@@ -66,6 +66,21 @@ export function useSSE({ url, enabled, dispatch }: UseSSEOptions) {
             url: parsed.url,
           });
           break;
+        case "understanding_start":
+          dispatch({ type: "UNDERSTANDING_START" });
+          break;
+        case "understanding_progress":
+          dispatch({
+            type: "UNDERSTANDING_PROGRESS",
+            stage: parsed.stage,
+          });
+          break;
+        case "understanding_complete":
+          dispatch({
+            type: "UNDERSTANDING_COMPLETE",
+            payload: parsed.payload,
+          });
+          break;
         case "device_identified":
           dispatch({
             type: "DEVICE_IDENTIFIED",

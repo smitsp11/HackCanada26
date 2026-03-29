@@ -86,4 +86,27 @@ export async function getPublicUrl(storagePath: string): Promise<string> {
   return data.publicUrl;
 }
 
+/**
+ * Lists files under a given storage prefix (directory-like path).
+ * Returns the full storage path for each file.
+ */
+export async function listFiles(prefix: string): Promise<string[]> {
+  const dirPath = prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
+  const folder = dirPath.substring(0, dirPath.lastIndexOf("/"));
+  const search = dirPath.substring(dirPath.lastIndexOf("/") + 1);
+
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .list(folder, { search });
+
+  if (error || !data) return [];
+
+  const nested = await supabase.storage.from(BUCKET).list(dirPath);
+  if (nested.error || !nested.data) return [];
+
+  return nested.data
+    .filter((f) => f.name && !f.id?.startsWith("."))
+    .map((f) => `${dirPath}/${f.name}`);
+}
+
 export { supabase, BUCKET };

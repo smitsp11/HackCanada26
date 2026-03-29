@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import pool from "@/lib/db";
-import { identifyWithGemini } from "@/lib/identify-gemini";
 import {
   diagnoseWithGemini,
   synthesizeRepairSteps,
@@ -9,6 +8,7 @@ import {
 import { getPublicUrl } from "@/lib/storage";
 import { auditLog } from "@/lib/audit";
 import { logger } from "@/lib/observability";
+import { runUnderstandingPipeline, buildDeviceString } from "@/lib/multimodal";
 
 export const dynamic = "force-dynamic";
 
@@ -280,37 +280,34 @@ export async function GET(
           }
         }
 
-        const modelAsset = assets.find((a: { slot_key: string }) => a.slot_key === "model");
-        const modelImageUrl =
-          modelAsset?.storage_uri_normalized
-            ? await getPublicUrl(modelAsset.storage_uri_normalized).catch(() => modelAsset.cloudinary_url)
-            : modelAsset?.cloudinary_url || imageUrls[0] || "";
+        // ── Multimodal Understanding Pipeline ──
+        const understanding = await runUnderstandingPipeline(
+          caseId,
+          usableAssets,
+          symptom,
+          applianceHint,
+          caseRow.metadata as Record<string, unknown> | undefined,
+          send,
+        );
 
-        let deviceId = applianceHint || "Unknown appliance";
-
-        if (modelImageUrl) {
-          try {
-            const geminiId = await identifyWithGemini(modelImageUrl);
-            if (geminiId.company || geminiId.modelNumber) {
-              deviceId = [geminiId.company, geminiId.modelNumber]
-                .filter(Boolean)
-                .join(" ");
-            }
-          } catch (e) {
-            logger.warn("Device identification failed, using hint", ctx, {
-              error: e instanceof Error ? e.message : String(e),
-            });
-          }
-        }
-
+        const deviceId = buildDeviceString(understanding);
         send({ type: "device_identified", makeModel: deviceId });
+
+        // Build enriched device hint for diagnosis using understanding output
+        const errorCodeHints = understanding.error_codes.map((e) => e.value).join(", ");
+        const symptomHints = understanding.symptoms.map((s) => s.tag).join(", ");
+        const enrichedHint = [
+          deviceId,
+          errorCodeHints ? `Error codes: ${errorCodeHints}` : "",
+          symptomHints ? `Symptoms: ${symptomHints}` : "",
+        ].filter(Boolean).join(" | ");
 
         let diagnosis: DiagnosisResult;
         try {
           diagnosis = await diagnoseWithGemini(
             imageUrls.filter(Boolean),
             symptom,
-            deviceId,
+            enrichedHint,
           );
         } catch (e) {
           logger.error("Diagnosis failed", ctx, {
