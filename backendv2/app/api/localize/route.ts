@@ -18,12 +18,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log("[localize] dimensions used for pixel conversion:", {
-      width,
-      height,
-      imageUrl,
-    });
-
     const result = await localizePart({
       imageUrl,
       width,

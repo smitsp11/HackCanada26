@@ -117,8 +117,6 @@ export async function localizePart(args: {
     Math.round((pixelBox.x1 / width) * 1000),
   ];
 
-  console.log("[localize] hardcoded mode active:", { pixelBox, box2d });
-
   return {
     found: true,
     targetLabel: localizationPlan.targetLabel || "target",
@@ -154,8 +152,6 @@ export async function localizePart(args: {
   if (!text) {
     throw new Error("Gemini returned empty localization response");
   }
-
-  console.log("[localize] raw Gemini response.text:", text);
 
   let parsed: LocalizationResult;
   try {

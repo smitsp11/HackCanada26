@@ -10,19 +10,25 @@ import Phase3Synthesis from "./Phase3Synthesis";
 import ResultPane from "./ResultPane";
 
 interface OperaShellProps {
-  assetUrls: [string, string, string];
-  symptom: string;
+  caseId?: string;
+  assetUrls?: [string, string, string];
+  symptom?: string;
+  makeModel?: string;
   useDemoAssets?: boolean;
 }
 
-export default function OperaShell({ assetUrls, symptom, useDemoAssets = false }: OperaShellProps) {
+export default function OperaShell({ caseId, assetUrls, symptom, makeModel, useDemoAssets = false }: OperaShellProps) {
   const [state, dispatch] = useOperaReducer();
   const [sseEnabled, setSSEEnabled] = useState(false);
   const started = useRef(false);
   const advanceScheduled = useRef(false);
 
+  const sseUrl = caseId
+    ? `/api/cases/${caseId}/events`
+    : "/api/diagnose?urls=" + encodeURIComponent(JSON.stringify(assetUrls || [])) + "&symptom=" + encodeURIComponent(symptom || "") + (makeModel ? "&makeModel=" + encodeURIComponent(makeModel) : "");
+
   useSSE({
-    url: "/api/diagnose?urls=" + encodeURIComponent(JSON.stringify(assetUrls)) + "&symptom=" + encodeURIComponent(symptom),
+    url: sseUrl,
     enabled: sseEnabled,
     dispatch,
   });
@@ -88,7 +94,7 @@ export default function OperaShell({ assetUrls, symptom, useDemoAssets = false }
             steps={state.repairSteps}
             logs={state.diagnosticLogs}
             deviceId={state.deviceId}
-            symptom={symptom}
+            symptom={symptom || state.symptomSections?.symptom || "Diagnosed issue"}
           />
         )}
 

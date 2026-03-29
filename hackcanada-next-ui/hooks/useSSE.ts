@@ -31,6 +31,28 @@ export function useSSE({ url, enabled, dispatch }: UseSSEOptions) {
       retriesRef.current = 0;
 
       switch (parsed.type) {
+        case "case_status":
+          dispatch({
+            type: "CASE_STATUS",
+            status: parsed.status,
+          });
+          break;
+        case "preprocessing_progress":
+          dispatch({
+            type: "PREPROCESSING_PROGRESS",
+            total: parsed.total,
+            done: parsed.done,
+            ready: parsed.ready,
+            uploaded: parsed.uploaded,
+          });
+          break;
+        case "asset_preprocessed":
+          dispatch({
+            type: "ASSET_PREPROCESSED",
+            asset_id: parsed.asset_id,
+            slot_key: parsed.slot_key,
+          });
+          break;
         case "slot_processing":
           dispatch({
             type: "SLOT_PROCESSING",

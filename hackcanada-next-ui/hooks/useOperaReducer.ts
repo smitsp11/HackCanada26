@@ -1,12 +1,11 @@
 "use client";
 
 import { useReducer } from "react";
-import type { RepairStep } from "@/lib/events";
+import type { RepairStep, CaseStatus } from "@/lib/events";
 
 export type Phase =
   | "IDLE"
   | "PHASE_1_INGESTION"
-  | "TRANSITION_CUT"
   | "PHASE_2_COGNITIVE"
   | "PHASE_3_SYNTHESIS"
   | "COMPLETE"
@@ -18,6 +17,8 @@ export interface OperaState {
   phase: Phase;
   slots: [SlotStatus, SlotStatus, SlotStatus];
   slotUrls: [string | null, string | null, string | null];
+  caseStatus: CaseStatus | null;
+  preprocessingProgress: { total: number; done: number; ready: number } | null;
   deviceId: string | null;
   manualMatch: { id: string; title: string } | null;
   symptomSections: { symptom: string; sections: string } | null;
@@ -30,10 +31,12 @@ export interface OperaState {
 
 export type OperaAction =
   | { type: "UPLOAD_COMPLETE" }
+  | { type: "CASE_STATUS"; status: CaseStatus }
+  | { type: "PREPROCESSING_PROGRESS"; total: number; done: number; ready: number; uploaded: number }
+  | { type: "ASSET_PREPROCESSED"; asset_id: string; slot_key: string }
   | { type: "SLOT_PROCESSING"; slotIndex: number }
   | { type: "SLOT_COMPLETE"; slotIndex: number; url: string }
   | { type: "ALL_SLOTS_DONE" }
-  | { type: "CUT_COMPLETE" }
   | { type: "ADVANCE_TO_PHASE_2" }
   | { type: "DEVICE_IDENTIFIED"; makeModel: string }
   | { type: "MANUAL_FOUND"; manualId: string; title: string }
@@ -50,6 +53,8 @@ const initialState: OperaState = {
   phase: "IDLE",
   slots: ["idle", "idle", "idle"],
   slotUrls: [null, null, null],
+  caseStatus: null,
+  preprocessingProgress: null,
   deviceId: null,
   manualMatch: null,
   symptomSections: null,
@@ -77,6 +82,46 @@ function operaReducer(state: OperaState, action: OperaAction): OperaState {
         ...state,
         phase: "PHASE_1_INGESTION",
         diagnosticLogs: ["INITIALIZING_PIPELINE..."],
+      };
+
+    case "CASE_STATUS": {
+      const statusLog = `CASE_STATUS: ${action.status.toUpperCase()}`;
+      const newState: Partial<OperaState> = { caseStatus: action.status };
+
+      if (action.status === "analyzing" && state.phase === "PHASE_1_INGESTION") {
+        return {
+          ...state,
+          ...newState,
+          phase: "PHASE_2_COGNITIVE",
+          slots: ["complete", "complete", "complete"],
+          diagnosticLogs: [...state.diagnosticLogs, statusLog, "COGNITIVE_ENGINE_ONLINE", "SCANNING_DEVICE_SIGNATURE..."],
+        };
+      }
+
+      return {
+        ...state,
+        ...newState,
+        diagnosticLogs: [...state.diagnosticLogs, statusLog],
+      };
+    }
+
+    case "PREPROCESSING_PROGRESS":
+      return {
+        ...state,
+        preprocessingProgress: { total: action.total, done: action.done, ready: action.ready },
+        diagnosticLogs: [
+          ...state.diagnosticLogs,
+          `PREPROCESSING: ${action.done}/${action.total} done (${action.ready} ready)`,
+        ],
+      };
+
+    case "ASSET_PREPROCESSED":
+      return {
+        ...state,
+        diagnosticLogs: [
+          ...state.diagnosticLogs,
+          `ASSET_READY: ${action.slot_key || action.asset_id}`,
+        ],
       };
 
     case "SLOT_PROCESSING":
@@ -107,17 +152,6 @@ function operaReducer(state: OperaState, action: OperaAction): OperaState {
 
     case "ALL_SLOTS_DONE":
       return { ...state, phase: "PHASE_2_COGNITIVE" };
-
-    case "CUT_COMPLETE":
-      return {
-        ...state,
-        phase: "PHASE_2_COGNITIVE",
-        diagnosticLogs: [
-          ...state.diagnosticLogs,
-          "COGNITIVE_ENGINE_ONLINE",
-          "SCANNING_DEVICE_SIGNATURE...",
-        ],
-      };
 
     case "ADVANCE_TO_PHASE_2":
       return {
