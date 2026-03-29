@@ -128,7 +128,53 @@ async function migrate() {
     );
   `);
 
-  console.log("Migration complete: products, cases, assets, jobs, asset_metadata tables created.");
+  // ── Phase C: Production Hardening ──
+
+  // Audit logs table
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id SERIAL PRIMARY KEY,
+      event_type TEXT NOT NULL,
+      case_id TEXT,
+      asset_id TEXT,
+      job_id TEXT,
+      user_id TEXT,
+      request_id TEXT,
+      details JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_case_id_created
+      ON audit_logs(case_id, created_at);
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_event_type
+      ON audit_logs(event_type);
+  `);
+
+  // Phase C columns on assets
+  const phaseC_asset_cols = [
+    ["scan_status", "TEXT DEFAULT 'pending'"],
+    ["duplicate_of", "TEXT REFERENCES assets(asset_id)"],
+  ];
+  for (const [col, typedef] of phaseC_asset_cols) {
+    await client.query(`
+      DO $$ BEGIN
+        ALTER TABLE assets ADD COLUMN ${col} ${typedef};
+      EXCEPTION WHEN duplicate_column THEN NULL;
+      END $$;
+    `);
+  }
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_assets_checksum
+      ON assets(checksum_sha256) WHERE checksum_sha256 IS NOT NULL;
+  `);
+
+  console.log("Migration complete: all tables created (Phase A/B/C).");
   await client.end();
 }
 

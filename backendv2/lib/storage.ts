@@ -76,6 +76,11 @@ export async function uploadDerived(
   return storagePath;
 }
 
+export async function deleteFile(storagePath: string): Promise<boolean> {
+  const { error } = await supabase.storage.from(BUCKET).remove([storagePath]);
+  return !error;
+}
+
 export async function getPublicUrl(storagePath: string): Promise<string> {
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(storagePath);
   return data.publicUrl;

@@ -7,6 +7,8 @@ import {
   type DiagnosisResult,
 } from "@/lib/diagnose";
 import { getPublicUrl } from "@/lib/storage";
+import { auditLog } from "@/lib/audit";
+import { logger } from "@/lib/observability";
 
 export const dynamic = "force-dynamic";
 
@@ -67,7 +69,6 @@ async function waitForPreprocessing(
     await delay(pollInterval);
   }
 
-  // Timed out -- report how far we got
   const final = await pool.query(
     `SELECT
        COUNT(*) FILTER (WHERE processing_status IN ('ready', 'failed')) AS done,
@@ -87,6 +88,8 @@ export async function GET(
   { params }: { params: Promise<{ caseId: string }> },
 ) {
   const { caseId } = await params;
+  const ctx = { case_id: caseId };
+  const pipelineStart = Date.now();
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -103,6 +106,9 @@ export async function GET(
       }
 
       try {
+        await auditLog("case_pipeline_started", ctx);
+        logger.info("SSE pipeline started", ctx);
+
         const caseResult = await pool.query(
           `SELECT case_id, description_raw, metadata, appliance_type_hint
            FROM cases WHERE case_id = $1`,
@@ -135,7 +141,6 @@ export async function GET(
         const hasSignedUrlAssets = assets.some((a: { storage_uri_raw: string | null }) => a.storage_uri_raw);
 
         if (hasSignedUrlAssets) {
-          // Phase B flow: assets were uploaded via signed URLs, preprocessing is async
           send({ type: "case_status", status: "preprocessing" });
 
           const ppResult = await waitForPreprocessing(caseId, send);
@@ -146,6 +151,7 @@ export async function GET(
               [caseId],
             );
             send({ type: "case_status", status: "preprocessing_failed" });
+            await auditLog("case_pipeline_failed", ctx, { reason: "preprocessing_timeout" });
             sendError(
               `Preprocessing timed out after ${PREPROCESSING_TIMEOUT_MS / 1000}s ` +
               `(${ppResult.doneCount}/${ppResult.totalCount} assets finished). ` +
@@ -160,11 +166,11 @@ export async function GET(
               [caseId],
             );
             send({ type: "case_status", status: "preprocessing_failed" });
+            await auditLog("case_pipeline_failed", ctx, { reason: "all_assets_failed" });
             sendError("All assets failed preprocessing. Check uploads and try again.");
             return;
           }
 
-          // Refresh asset data after preprocessing
           const refreshed = await pool.query(
             `SELECT asset_id, asset_type, slot_key, cloudinary_url,
                     storage_uri_raw, storage_uri_normalized, upload_status,
@@ -189,7 +195,6 @@ export async function GET(
           assets.length = 0;
           assets.push(...refreshed.rows);
         } else {
-          // Phase A fallback: Cloudinary-based assets, do inline validation
           const slotOrder = ["model", "additional", "video"] as const;
           const orderedUrls: string[] = slotOrder.map((key) => {
             const match = assets.find(
@@ -235,13 +240,6 @@ export async function GET(
           }
         }
 
-        // ── Pre-Gemini gate ─────────────────────────────────────────
-        // Both upload paths (Phase A Cloudinary inline, Phase B signed-URL
-        // async) must converge to the same state before the Gemini pipeline
-        // starts. Required contract:
-        //   - At least one asset has a reachable URL (cloudinary or storage)
-        //   - Case has a non-empty symptom description
-        //   - No path reaches here if *all* assets failed (handled above)
         const usableAssets = assets.filter(
           (a: { cloudinary_url?: string; storage_uri_normalized?: string; validation_status: string }) =>
             (a.cloudinary_url || a.storage_uri_normalized) &&
@@ -254,6 +252,7 @@ export async function GET(
             [caseId],
           );
           send({ type: "case_status", status: "failed_validation" });
+          await auditLog("case_pipeline_failed", ctx, { reason: "no_usable_assets" });
           sendError("No usable assets available for analysis. All uploads failed validation.");
           return;
         }
@@ -267,7 +266,6 @@ export async function GET(
           [caseId],
         );
 
-        // Build image URLs for Gemini - prefer storage URLs, fall back to Cloudinary
         const imageUrls: string[] = [];
         for (const asset of assets) {
           if (asset.storage_uri_normalized) {
@@ -299,7 +297,9 @@ export async function GET(
                 .join(" ");
             }
           } catch (e) {
-            console.warn("Device identification failed, using hint:", e);
+            logger.warn("Device identification failed, using hint", ctx, {
+              error: e instanceof Error ? e.message : String(e),
+            });
           }
         }
 
@@ -313,7 +313,9 @@ export async function GET(
             deviceId,
           );
         } catch (e) {
-          console.error("Diagnosis failed:", e);
+          logger.error("Diagnosis failed", ctx, {
+            error: e instanceof Error ? e.message : String(e),
+          });
           diagnosis = {
             makeModel: deviceId,
             manualTitle: `${deviceId} Service Manual`,
@@ -372,7 +374,9 @@ export async function GET(
             diagnosis,
           );
         } catch (e) {
-          console.error("Synthesis failed:", e);
+          logger.error("Synthesis failed", ctx, {
+            error: e instanceof Error ? e.message : String(e),
+          });
           steps = [
             { id: 1, instruction: "Turn off power/gas supply to the appliance for safety.", schematicUrl: null },
             { id: 2, instruction: `Inspect the appliance for signs related to: ${symptom}`, schematicUrl: null },
@@ -391,12 +395,24 @@ export async function GET(
           [caseId],
         );
 
+        const pipelineDuration = Date.now() - pipelineStart;
+        await auditLog("case_pipeline_completed", ctx, { duration_ms: pipelineDuration });
+        logger.metric({
+          event: "pipeline_completed",
+          duration_ms: pipelineDuration,
+        }, ctx);
+
         send({ type: "case_status", status: "ready_for_analysis" });
         send({ type: "synthesis_complete", steps });
 
         controller.close();
       } catch (error) {
-        console.error("SSE pipeline error:", error);
+        logger.error("SSE pipeline error", ctx, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+        await auditLog("case_pipeline_failed", ctx, {
+          error: error instanceof Error ? error.message : String(error),
+        });
         try {
           sendError(
             error instanceof Error ? error.message : "Pipeline failed",
