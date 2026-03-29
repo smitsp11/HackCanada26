@@ -10,12 +10,15 @@ import type {
   IdentityLevel,
 } from "./types";
 import {
+  CONFIDENCE_HIGH,
   CONFIDENCE_PROBABLE,
+  CONFIDENCE_WEAK,
   generateUnderstandingId,
 } from "./types";
 import type { ClassifyResult } from "./classify";
 
 const CATALOG_MATCH_BONUS = 0.1;
+const VARIANT_EDIT_DISTANCE_THRESHOLD = 2;
 
 function pickCandidates(candidates: Candidate[], type: string): Candidate[] {
   return candidates
@@ -31,8 +34,51 @@ function hasCatalogEvidence(c: Candidate, allObs: { observation_id: string; sour
 }
 
 /**
+ * Computes Levenshtein edit distance between two strings.
+ */
+function editDistance(a: string, b: string): number {
+  const la = a.length;
+  const lb = b.length;
+  const dp: number[][] = Array.from({ length: la + 1 }, () => Array(lb + 1).fill(0));
+
+  for (let i = 0; i <= la; i++) dp[i][0] = i;
+  for (let j = 0; j <= lb; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= la; i++) {
+    for (let j = 1; j <= lb; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+
+  return dp[la][lb];
+}
+
+/**
+ * Detects near-variant model pairs (differing by 1-2 suffix characters)
+ * and flags them rather than collapsing.
+ */
+function tagNearVariants(models: ModelCandidate[]): void {
+  if (models.length < 2) return;
+
+  for (let i = 0; i < models.length; i++) {
+    for (let j = i + 1; j < models.length; j++) {
+      const normA = models[i].model.toUpperCase().replace(/[\s\-/]/g, "");
+      const normB = models[j].model.toUpperCase().replace(/[\s\-/]/g, "");
+      const dist = editDistance(normA, normB);
+
+      if (dist > 0 && dist <= VARIANT_EDIT_DISTANCE_THRESHOLD) {
+        models[i].near_variant = true;
+        models[j].near_variant = true;
+      }
+    }
+  }
+}
+
+/**
  * Ranks candidates and determines fallback resolution level.
- * Assembles the final UnderstandingOutput.
+ * Uses confidence band constants, catalog bonus, and near-variant detection.
  */
 export function rankAndAssemble(
   caseId: string,
@@ -45,34 +91,29 @@ export function rankAndAssemble(
   const errorCandidates = pickCandidates(candidates, "error_code");
   const symptomCandidates = pickCandidates(candidates, "symptom");
 
-  // Apply catalog match bonus to model candidates
   for (const mc of modelCandidates) {
     if (hasCatalogEvidence(mc, allObservations)) {
       mc.confidence = Math.min(1, mc.confidence + CATALOG_MATCH_BONUS);
     }
   }
 
-  // Re-sort model candidates after bonus
   modelCandidates.sort((a, b) => b.confidence - a.confidence);
   modelCandidates.forEach((c, i) => {
     c.rank = i + 1;
   });
 
-  // Build appliance type prediction
   const applianceType: ApplianceTypePrediction = {
     top_prediction: classifyResult.appliance_type,
     confidence: classifyResult.confidence,
     alternatives: classifyResult.alternatives,
   };
 
-  // Build brand candidates output
   const brands: BrandCandidate[] = brandCandidates.map((c) => ({
     brand: c.value,
     confidence: c.confidence,
     evidence: c.supporting_obs_ids,
   }));
 
-  // Build model candidates output
   const models: ModelCandidate[] = modelCandidates.map((c) => ({
     model: c.value,
     confidence: c.confidence,
@@ -80,21 +121,20 @@ export function rankAndAssemble(
     evidence: c.supporting_obs_ids,
   }));
 
-  // Build error codes output
+  tagNearVariants(models);
+
   const errorCodes: ErrorCode[] = errorCandidates.map((c) => ({
     value: c.value,
     confidence: c.confidence,
     source: c.supporting_obs_ids.join(","),
   }));
 
-  // Build symptoms output
   const symptoms: SymptomTag[] = symptomCandidates.map((c) => ({
     tag: c.value,
     confidence: c.confidence,
     source: "text_parse",
   }));
 
-  // Determine fallback level
   const topModel = models[0];
   const topBrand = brands[0];
   const fallbackStatus = determineFallback(topModel, topBrand, applianceType);
@@ -120,12 +160,21 @@ function determineFallback(
   let exactModelResolved = false;
   const scope: string[] = [];
 
-  if (topModel && topModel.confidence >= CONFIDENCE_PROBABLE) {
-    // Check if there's a close second model (series-level)
+  if (topModel && topModel.confidence >= CONFIDENCE_HIGH) {
     level = "exact";
     exactModelResolved = true;
     scope.push("model", "brand", "appliance_type");
-  } else if (topModel && topModel.confidence >= 0.40) {
+  } else if (topModel && topModel.confidence >= CONFIDENCE_PROBABLE) {
+    // High-probable range: still exact if no near-variant ambiguity
+    if (topModel.near_variant) {
+      level = "series";
+      scope.push("brand", "appliance_type", "error_code", "symptoms");
+    } else {
+      level = "exact";
+      exactModelResolved = true;
+      scope.push("model", "brand", "appliance_type");
+    }
+  } else if (topModel && topModel.confidence >= CONFIDENCE_WEAK) {
     level = "series";
     scope.push("brand", "appliance_type", "error_code", "symptoms");
   } else if (topBrand && topBrand.confidence >= 0.50) {

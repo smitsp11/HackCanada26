@@ -65,6 +65,7 @@ export interface ModelCandidate {
   confidence: number;
   rank: number;
   evidence: string[];
+  near_variant?: boolean;
 }
 
 export interface ErrorCode {

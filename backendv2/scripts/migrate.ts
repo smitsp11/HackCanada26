@@ -174,6 +174,19 @@ async function migrate() {
       ON assets(checksum_sha256) WHERE checksum_sha256 IS NOT NULL;
   `);
 
+  // Phase 2: Perceptual hash column for image dedup
+  await client.query(`
+    DO $$ BEGIN
+      ALTER TABLE assets ADD COLUMN phash TEXT;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END $$;
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_assets_phash
+      ON assets(phash) WHERE phash IS NOT NULL;
+  `);
+
   // ── Multimodal Understanding Layer tables ──
 
   await client.query(`

@@ -12,6 +12,7 @@ import { auditLog } from "./audit";
 import { logger } from "./observability";
 import { scanFile } from "./malware-scan";
 import { withRetry, PermanentError } from "./retry";
+import { computeDHash } from "./phash";
 
 const execAsync = promisify(exec);
 
@@ -186,6 +187,18 @@ async function preprocessImage(
     `UPDATE assets SET storage_uri_normalized = $2, storage_uri_thumbnail = $3 WHERE asset_id = $1`,
     [assetId, normalizedPath, thumbPath],
   );
+
+  try {
+    const phash = await computeDHash(normalizedBuffer);
+    await pool.query(
+      `UPDATE assets SET phash = $2 WHERE asset_id = $1`,
+      [assetId, phash],
+    );
+  } catch (e) {
+    logger.warn("Perceptual hash computation failed", ctx, {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
 }
 
 async function preprocessVideo(

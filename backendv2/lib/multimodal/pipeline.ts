@@ -1,13 +1,16 @@
 import pool from "../db";
-import { getPublicUrl } from "../storage";
+import { getPublicUrl, downloadFile, listFiles } from "../storage";
 import { classifyAppliance } from "./classify";
 import { runOcr } from "./ocr-regions";
 import { extractEntities } from "./extract-entities";
 import { extractSymptoms } from "./symptom-nlp";
 import { fuseObservations } from "./fusion";
 import { rankAndAssemble } from "./rank";
+import { selectBestFrames } from "./frame-select";
 import type { Observation, Candidate, UnderstandingOutput, UnderstandingStage } from "./types";
+import { generateObservationId } from "./types";
 import { logger } from "../observability";
+import { hammingDistance, PERCEPTUAL_DUPLICATE_THRESHOLD } from "../phash";
 
 type SendFn = (data: Record<string, unknown>) => void;
 
@@ -141,6 +144,138 @@ export function buildDeviceString(output: UnderstandingOutput): string {
   return parts.length > 0 ? parts.join(" ") : "Unknown appliance";
 }
 
+async function resolveVideoFrames(
+  caseId: string,
+  assets: AssetRow[],
+): Promise<{ asset_id: string; url: string }[]> {
+  const videoAssets = assets.filter((a) => a.asset_type === "video");
+  if (videoAssets.length === 0) return [];
+
+  const results: { asset_id: string; url: string }[] = [];
+
+  for (const va of videoAssets) {
+    try {
+      const framesPrefix = `frames/${caseId}/${va.asset_id}`;
+      const framePaths = await listFiles(framesPrefix);
+
+      if (framePaths.length === 0) {
+        logger.info("No extracted frames found for video asset", {
+          case_id: caseId,
+          asset_id: va.asset_id,
+        });
+        continue;
+      }
+
+      const frameBuffers: { storagePath: string; buffer: Buffer }[] = [];
+      for (const fp of framePaths) {
+        if (!fp.endsWith(".jpg") && !fp.endsWith(".jpeg") && !fp.endsWith(".png")) continue;
+        try {
+          const buf = await downloadFile(fp);
+          frameBuffers.push({ storagePath: fp, buffer: buf });
+        } catch {
+          // Skip frames that can't be downloaded
+        }
+      }
+
+      if (frameBuffers.length === 0) continue;
+
+      const selected = await selectBestFrames(frameBuffers, 5, {
+        case_id: caseId,
+        asset_id: va.asset_id,
+      });
+
+      for (const frame of selected) {
+        const publicUrl = await getPublicUrl(frame.storagePath);
+        if (publicUrl) {
+          results.push({ asset_id: va.asset_id, url: publicUrl });
+        }
+      }
+
+      logger.info(`Selected ${selected.length}/${framePaths.length} video frames`, {
+        case_id: caseId,
+        asset_id: va.asset_id,
+        low_quality_count: selected.filter((s) => s.lowQuality).length,
+      });
+    } catch (e) {
+      logger.warn("Failed to resolve video frames", {
+        case_id: caseId,
+        asset_id: va.asset_id,
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
+
+  return results;
+}
+
+async function deduplicateAssets(
+  caseId: string,
+  assets: AssetRow[],
+  observations: Observation[],
+): Promise<AssetRow[]> {
+  const imageAssetIds = assets
+    .filter((a) => a.asset_type === "image")
+    .map((a) => a.asset_id);
+
+  if (imageAssetIds.length < 2) return assets;
+
+  try {
+    const { rows } = await pool.query<{ asset_id: string; phash: string | null }>(
+      `SELECT asset_id, phash FROM assets WHERE asset_id = ANY($1)`,
+      [imageAssetIds],
+    );
+
+    const hashMap = new Map<string, string>();
+    for (const row of rows) {
+      if (row.phash) hashMap.set(row.asset_id, row.phash);
+    }
+
+    const skipIds = new Set<string>();
+    const entries = [...hashMap.entries()];
+
+    for (let i = 0; i < entries.length; i++) {
+      if (skipIds.has(entries[i][0])) continue;
+      for (let j = i + 1; j < entries.length; j++) {
+        if (skipIds.has(entries[j][0])) continue;
+        const dist = hammingDistance(entries[i][1], entries[j][1]);
+        if (dist <= PERCEPTUAL_DUPLICATE_THRESHOLD) {
+          skipIds.add(entries[j][0]);
+          observations.push({
+            observation_id: generateObservationId(),
+            case_id: caseId,
+            asset_id: entries[j][0],
+            source_type: "classifier",
+            field: "raw_ocr_text",
+            value: `perceptual_duplicate_of:${entries[i][0]}`,
+            confidence: 1 - dist / 64,
+            region_type: null,
+            metadata: {
+              duplicate_source: entries[i][0],
+              hamming_distance: dist,
+              method: "perceptual_hash",
+            },
+          });
+          await pool.query(
+            `UPDATE assets SET duplicate_of = $2 WHERE asset_id = $1`,
+            [entries[j][0], entries[i][0]],
+          );
+        }
+      }
+    }
+
+    if (skipIds.size > 0) {
+      logger.info(`Perceptual dedup removed ${skipIds.size} duplicate(s)`, { case_id: caseId });
+      return assets.filter((a) => !skipIds.has(a.asset_id));
+    }
+  } catch (e) {
+    logger.warn("Perceptual dedup check failed, proceeding with all assets", { case_id: caseId }, {
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
+
+  return assets;
+}
+
 /**
  * Runs the full multimodal understanding pipeline for a case.
  * Calls submodules sequentially, persists results, emits SSE events.
@@ -161,12 +296,15 @@ export async function runUnderstandingPipeline(
 
   const allObservations: Observation[] = [];
 
-  // 1. Classify appliance type
+  // 0. Perceptual dedup — skip near-duplicate image assets
+  const dedupedAssets = await deduplicateAssets(caseId, usableAssets, allObservations);
+
+  // 1. Classify appliance type (images + selected video frames)
   sendProgress(send, "classify");
   const imageAssets: { asset_id: string; url: string }[] = [];
   const imageUrls: string[] = [];
 
-  for (const asset of usableAssets) {
+  for (const asset of dedupedAssets) {
     if (asset.asset_type === "image" || asset.slot_key === "model" || asset.slot_key === "additional") {
       const url = await resolveImageUrl(asset);
       if (url) {
@@ -175,6 +313,11 @@ export async function runUnderstandingPipeline(
       }
     }
   }
+
+  // Resolve video frames from preprocessed frame extractions
+  const videoFrameAssets = await resolveVideoFrames(caseId, dedupedAssets);
+  imageAssets.push(...videoFrameAssets.map((vf) => ({ asset_id: vf.asset_id, url: vf.url })));
+  imageUrls.push(...videoFrameAssets.map((vf) => vf.url));
 
   const { observations: classifyObs, result: classifyResult } =
     await classifyAppliance(caseId, imageUrls, applianceHint);
