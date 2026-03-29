@@ -20,10 +20,23 @@ export async function GET(
     }
 
     const assetsResult = await pool.query(
-      `SELECT asset_id, asset_type, slot_key, mime_type, size_bytes,
-              cloudinary_public_id, cloudinary_url,
-              validation_status, processing_status, created_at
-       FROM assets WHERE case_id = $1
+      `SELECT a.asset_id, a.asset_type, a.slot_key, a.mime_type, a.size_bytes,
+              a.original_filename, a.cloudinary_public_id, a.cloudinary_url,
+              a.storage_uri_raw, a.storage_uri_normalized, a.storage_uri_thumbnail,
+              a.upload_status, a.validation_status, a.processing_status,
+              a.checksum_sha256, a.created_at,
+              m.width, m.height, m.duration_sec, m.codec, m.orientation
+       FROM assets a
+       LEFT JOIN asset_metadata m ON a.asset_id = m.asset_id
+       WHERE a.case_id = $1
+       ORDER BY a.created_at`,
+      [caseId],
+    );
+
+    const jobsResult = await pool.query(
+      `SELECT job_id, asset_id, job_type, status, error_code, error_message,
+              retry_count, created_at, completed_at
+       FROM jobs WHERE case_id = $1
        ORDER BY created_at`,
       [caseId],
     );
@@ -32,6 +45,7 @@ export async function GET(
     return NextResponse.json({
       ...caseRow,
       assets: assetsResult.rows,
+      jobs: jobsResult.rows,
     });
   } catch (error) {
     console.error("GET /api/cases/[caseId] failed:", error);

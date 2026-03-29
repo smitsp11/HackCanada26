@@ -1,0 +1,84 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+const BUCKET = "raw-uploads";
+
+export async function createSignedUploadUrl(
+  caseId: string,
+  assetId: string,
+  filename: string,
+): Promise<{ uploadUrl: string; storagePath: string; expiresAt: string }> {
+  const storagePath = `raw/${caseId}/${assetId}/${filename}`;
+
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUploadUrl(storagePath);
+
+  if (error || !data) {
+    throw new Error(`Failed to create signed upload URL: ${error?.message}`);
+  }
+
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+  return {
+    uploadUrl: data.signedUrl,
+    storagePath,
+    expiresAt,
+  };
+}
+
+export async function verifyFileExists(storagePath: string): Promise<boolean> {
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .list(storagePath.substring(0, storagePath.lastIndexOf("/")), {
+      search: storagePath.substring(storagePath.lastIndexOf("/") + 1),
+    });
+
+  if (error) return false;
+  return (data?.length ?? 0) > 0;
+}
+
+export async function downloadFile(
+  storagePath: string,
+): Promise<Buffer> {
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .download(storagePath);
+
+  if (error || !data) {
+    throw new Error(`Failed to download file: ${error?.message}`);
+  }
+
+  const arrayBuffer = await data.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+}
+
+export async function uploadDerived(
+  storagePath: string,
+  buffer: Buffer,
+  contentType: string,
+): Promise<string> {
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(storagePath, buffer, {
+      contentType,
+      upsert: true,
+    });
+
+  if (error) {
+    throw new Error(`Failed to upload derived file: ${error.message}`);
+  }
+
+  return storagePath;
+}
+
+export async function getPublicUrl(storagePath: string): Promise<string> {
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(storagePath);
+  return data.publicUrl;
+}
+
+export { supabase, BUCKET };

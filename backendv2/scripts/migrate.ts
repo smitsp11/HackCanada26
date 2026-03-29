@@ -47,13 +47,37 @@ async function migrate() {
       slot_key TEXT,
       mime_type TEXT,
       size_bytes INTEGER,
+      original_filename TEXT,
       cloudinary_public_id TEXT,
       cloudinary_url TEXT,
+      checksum_sha256 TEXT,
+      storage_uri_raw TEXT,
+      storage_uri_normalized TEXT,
+      storage_uri_thumbnail TEXT,
+      upload_status TEXT NOT NULL DEFAULT 'pending',
       validation_status TEXT NOT NULL DEFAULT 'pending',
       processing_status TEXT NOT NULL DEFAULT 'pending',
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
   `);
+
+  // Add Phase B columns if they don't exist (safe for existing DBs)
+  const phaseB_asset_cols = [
+    ["original_filename", "TEXT"],
+    ["checksum_sha256", "TEXT"],
+    ["storage_uri_raw", "TEXT"],
+    ["storage_uri_normalized", "TEXT"],
+    ["storage_uri_thumbnail", "TEXT"],
+    ["upload_status", "TEXT NOT NULL DEFAULT 'pending'"],
+  ];
+  for (const [col, typedef] of phaseB_asset_cols) {
+    await client.query(`
+      DO $$ BEGIN
+        ALTER TABLE assets ADD COLUMN ${col} ${typedef};
+      EXCEPTION WHEN duplicate_column THEN NULL;
+      END $$;
+    `);
+  }
 
   await client.query(`
     CREATE INDEX IF NOT EXISTS idx_assets_case_id ON assets(case_id);
@@ -67,17 +91,44 @@ async function migrate() {
       job_type TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'queued',
       result JSONB,
+      error_code TEXT,
       error_message TEXT,
+      retry_count INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMPTZ DEFAULT NOW(),
       completed_at TIMESTAMPTZ
     );
   `);
 
+  // Add Phase B columns to jobs if they don't exist
+  for (const [col, typedef] of [["error_code", "TEXT"], ["retry_count", "INTEGER NOT NULL DEFAULT 0"]]) {
+    await client.query(`
+      DO $$ BEGIN
+        ALTER TABLE jobs ADD COLUMN ${col} ${typedef};
+      EXCEPTION WHEN duplicate_column THEN NULL;
+      END $$;
+    `);
+  }
+
   await client.query(`
     CREATE INDEX IF NOT EXISTS idx_jobs_case_id ON jobs(case_id);
   `);
 
-  console.log("Migration complete: products, cases, assets, jobs tables created.");
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS asset_metadata (
+      asset_id TEXT PRIMARY KEY REFERENCES assets(asset_id) ON DELETE CASCADE,
+      width INTEGER,
+      height INTEGER,
+      duration_sec NUMERIC,
+      codec TEXT,
+      frame_rate NUMERIC,
+      orientation INTEGER,
+      exif_json JSONB,
+      derived_metadata_json JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  console.log("Migration complete: products, cases, assets, jobs, asset_metadata tables created.");
   await client.end();
 }
 

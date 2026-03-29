@@ -11,13 +11,41 @@ const INTRO_SEEN_KEY = "opera-intro-seen";
 
 export default function Home() {
   const router = useRouter();
-  const [assets, setAssets] = useState<any[]>([]);
+  const [caseId, setCaseId] = useState<string | null>(null);
   const [showIntro, setShowIntro] = useState<boolean | null>(null);
   const [identifiedProduct, setIdentifiedProduct] = useState<IdentifiedProduct | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setShowIntro(!sessionStorage.getItem(INTRO_SEEN_KEY));
+  }, []);
+
+  // Create case eagerly so signed-URL uploads can register against it
+  // before the user clicks "Execute Diagnostic".
+  // TODO(cleanup): Abandoned sessions will leave orphaned case rows with
+  // status='created' and zero assets. Add a periodic cleanup job or DB
+  // cron to delete cases older than N hours that never progressed past
+  // 'created'. This is acceptable for MVP.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function createCase() {
+      try {
+        const res = await fetch("/api/cases", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        if (!res.ok) throw new Error("Failed to create case");
+        const data = await res.json();
+        if (!cancelled) setCaseId(data.case_id);
+      } catch (err) {
+        console.error("Early case creation failed:", err);
+      }
+    }
+
+    createCase();
+    return () => { cancelled = true; };
   }, []);
 
   const handleIntroComplete = () => {
@@ -30,68 +58,43 @@ export default function Home() {
   }, []);
 
   const handleExecute = async (finalSymptom: string) => {
-    if (assets.length === 0 && !finalSymptom.trim()) return;
+    if (!caseId || !finalSymptom.trim()) return;
     if (isSubmitting) return;
 
     setIsSubmitting(true);
 
     try {
-      const slotOrder = ["model", "additional", "video"] as const;
-
       const makeModel = identifiedProduct?.product
         ? `${identifiedProduct.product.company} ${identifiedProduct.product.display_name || identifiedProduct.product.model_number}`
         : identifiedProduct?.parsedBrand || identifiedProduct?.parsedModel
           ? [identifiedProduct.parsedBrand, identifiedProduct.parsedModel].filter(Boolean).join(" ")
           : undefined;
 
-      // Step 1: Create case
-      const caseRes = await fetch("/api/cases", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          appliance_type_hint: makeModel || undefined,
-        }),
-      });
-
-      if (!caseRes.ok) {
-        throw new Error("Failed to create case");
+      // Update case with appliance hint if we have one
+      if (makeModel) {
+        await fetch(`/api/cases/${caseId}/input`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            description: finalSymptom,
+            metadata: {
+              brand: identifiedProduct?.parsedBrand || undefined,
+              model: identifiedProduct?.parsedModel || undefined,
+            },
+            assets: [],
+          }),
+        });
+      } else {
+        await fetch(`/api/cases/${caseId}/input`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            description: finalSymptom,
+            assets: [],
+          }),
+        });
       }
 
-      const { case_id: caseId } = await caseRes.json();
-
-      // Step 2: Submit input (assets + description + metadata)
-      const assetPayload = slotOrder
-        .map((key) => {
-          const match = assets.find((a) => a.slot === key);
-          if (!match) return null;
-          return {
-            cloudinary_url: match.secure_url,
-            cloudinary_public_id: match.public_id,
-            slot_key: key,
-            asset_type: key === "video" ? "video" : "image",
-          };
-        })
-        .filter(Boolean);
-
-      const metadata: Record<string, string> = {};
-      if (identifiedProduct?.parsedBrand) metadata.brand = identifiedProduct.parsedBrand;
-      if (identifiedProduct?.parsedModel) metadata.model = identifiedProduct.parsedModel;
-
-      const inputRes = await fetch(`/api/cases/${caseId}/input`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          description: finalSymptom,
-          metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
-          assets: assetPayload,
-        }),
-      });
-
-      if (!inputRes.ok) {
-        throw new Error("Failed to submit case input");
-      }
-
-      // Step 3: Navigate with caseId
       router.push(`/diagnostic?caseId=${caseId}`);
     } catch (error) {
       console.error("Execute diagnostic failed:", error);
@@ -105,7 +108,7 @@ export default function Home() {
       <Header view="input" onAbort={() => {}} />
 
       <InputScreen
-        setAssets={setAssets}
+        caseId={caseId}
         onExecute={handleExecute}
         onProductIdentified={handleProductIdentified}
         isSubmitting={isSubmitting}
