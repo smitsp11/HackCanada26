@@ -8,7 +8,10 @@ export type SourceType =
   | "gemini"
   | "text_parse"
   | "catalog_lookup"
-  | "user_metadata";
+  | "user_metadata"
+  | "logo_detector"
+  | "panel_similarity"
+  | "audio_detector";
 
 export type ObservationField =
   | "appliance_type"
@@ -101,9 +104,12 @@ export interface UnderstandingOutput {
 
 export type UnderstandingStage =
   | "classify"
+  | "logo_detect"
   | "ocr"
   | "extract"
+  | "panel_similarity"
   | "symptoms"
+  | "audio"
   | "fusion"
   | "rank";
 

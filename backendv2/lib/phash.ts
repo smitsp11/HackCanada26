@@ -44,4 +44,10 @@ export function hammingDistance(hashA: string, hashB: string): number {
   return count;
 }
 
+// TUNING PARAMETER — not yet validated against real appliance photos.
+// Appliance images risk false positives: large uniform regions (white/stainless panels)
+// can make visually distinct images hash closer than expected. Conversely, slight
+// exposure differences on label close-ups can push genuine duplicates apart.
+// Validate empirically with a sample of real case images before treating as stable.
+// Raise to ~8 if false negatives dominate; lower to ~3 if false positives appear.
 export const PERCEPTUAL_DUPLICATE_THRESHOLD = 5;

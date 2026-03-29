@@ -1,0 +1,12 @@
+data/*.csv
+data/images/
+data/audio_clips/
+data/logo_dataset/
+models/*.onnx
+models/*.pt
+models/*.json
+models/calibration/*.json
+models/runs/
+notebooks/*.ipynb_checkpoints/
+__pycache__/
+*.pyc

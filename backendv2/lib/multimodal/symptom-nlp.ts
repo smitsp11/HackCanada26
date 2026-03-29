@@ -2,6 +2,7 @@ import { genai } from "../gemini";
 import { Type } from "@google/genai";
 import type { Observation } from "./types";
 import { generateObservationId } from "./types";
+import { logger } from "../observability";
 
 export const SYMPTOM_TAXONOMY = [
   // Drainage / water
@@ -261,6 +262,18 @@ Return JSON with a "symptoms" array. Each element has a "tag" (must be from the 
           const negation = detectNegation(descriptionRaw, symptom.tag);
           if (negation === "clear") continue;
 
+          if (negation === "ambiguous") {
+            // Log for post-launch review — the 0.6 multiplier is a heuristic.
+            // Collect real examples to determine if it over-suppresses or under-suppresses.
+            logger.info("Ambiguous negation detected", {
+              case_id: caseId,
+              tag: symptom.tag,
+              original_confidence: symptom.confidence,
+              reduced_confidence: symptom.confidence * 0.6,
+              description_snippet: descriptionRaw.slice(0, 200),
+            });
+          }
+
           const urgency = URGENCY_MAP[symptom.tag] || "low";
           observations.push({
             observation_id: generateObservationId(),
@@ -291,6 +304,14 @@ Return JSON with a "symptoms" array. Each element has a "tag" (must be from the 
       if (keywords.some((kw) => lower.includes(kw))) {
         const negation = detectNegation(descriptionRaw, tag);
         if (negation === "clear") continue;
+
+        if (negation === "ambiguous") {
+          logger.info("Ambiguous negation detected (keyword fallback)", {
+            case_id: caseId,
+            tag,
+            description_snippet: descriptionRaw.slice(0, 200),
+          });
+        }
 
         const urgency = URGENCY_MAP[tag] || "low";
         observations.push({

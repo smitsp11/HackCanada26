@@ -18,6 +18,9 @@ import {
 import type { ClassifyResult } from "./classify";
 
 const CATALOG_MATCH_BONUS = 0.1;
+// Cap prevents a single catalog_lookup (weight 1.0, confidence 0.95) from reaching 1.0
+// after bonus. A score of 1.0 should require multi-source corroboration, not one source.
+const POST_BONUS_CONFIDENCE_CAP = 0.97;
 const VARIANT_EDIT_DISTANCE_THRESHOLD = 2;
 
 function pickCandidates(candidates: Candidate[], type: string): Candidate[] {
@@ -93,7 +96,7 @@ export function rankAndAssemble(
 
   for (const mc of modelCandidates) {
     if (hasCatalogEvidence(mc, allObservations)) {
-      mc.confidence = Math.min(1, mc.confidence + CATALOG_MATCH_BONUS);
+      mc.confidence = Math.min(POST_BONUS_CONFIDENCE_CAP, mc.confidence + CATALOG_MATCH_BONUS);
     }
   }
 

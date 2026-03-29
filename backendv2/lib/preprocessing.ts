@@ -301,6 +301,51 @@ async function preprocessVideo(
         });
       }
     }
+
+    // Extract audio track for anomaly detection (Phase 3)
+    try {
+      const audioOutputPath = join(tmpDir, "audio.wav");
+      await execAsync(
+        `ffmpeg -y -i "${inputPath}" -vn -acodec pcm_s16le -ar 16000 -ac 1 "${audioOutputPath}" 2>/dev/null`,
+      );
+
+      const { stat, readFile: readAudioFile } = await import("node:fs/promises");
+      const audioStat = await stat(audioOutputPath);
+      if (audioStat.size > 44) {
+        const audioStoragePath = rawPath.replace("raw/", "audio/").replace(/\.[^.]+$/, "/audio.wav");
+        const audioBuffer = await readAudioFile(audioOutputPath);
+        await withRetry(() => uploadDerived(audioStoragePath, audioBuffer, "audio/wav"), {
+          maxRetries: 2,
+          onRetry: async (attempt) => {
+            await incrementRetry(jobId);
+            logger.warn(`Upload audio retry ${attempt}`, ctx);
+          },
+        });
+
+        const audioDuration = (audioStat.size - 44) / (16000 * 2);
+        await pool.query(
+          `UPDATE asset_metadata SET has_audio = true, audio_storage_uri = $2
+           WHERE asset_id = $1`,
+          [assetId, audioStoragePath],
+        );
+
+        logger.info("Audio track extracted", { ...ctx, audio_duration_sec: audioDuration.toFixed(1) });
+      } else {
+        await pool.query(
+          `UPDATE asset_metadata SET has_audio = false WHERE asset_id = $1`,
+          [assetId],
+        );
+        logger.info("No audio stream found in video", ctx);
+      }
+    } catch (e) {
+      await pool.query(
+        `UPDATE asset_metadata SET has_audio = false WHERE asset_id = $1`,
+        [assetId],
+      ).catch(() => {});
+      logger.warn("Audio extraction failed", ctx, {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
   } finally {
     // Clean up temp files
     try {

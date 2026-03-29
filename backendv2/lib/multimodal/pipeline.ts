@@ -1,12 +1,18 @@
 import pool from "../db";
 import { getPublicUrl, downloadFile, listFiles } from "../storage";
 import { classifyAppliance } from "./classify";
+import { detectLogos } from "./logo-detect";
 import { runOcr } from "./ocr-regions";
 import { extractEntities } from "./extract-entities";
+import { matchPanelSimilarity } from "./panel-similarity";
 import { extractSymptoms } from "./symptom-nlp";
+import { classifyAudioAnomalies } from "./audio-classify";
 import { fuseObservations } from "./fusion";
+import { learnedFuseObservations } from "./learned-fusion";
 import { rankAndAssemble } from "./rank";
+import { learnedRankAndAssemble } from "./learned-rank";
 import { selectBestFrames } from "./frame-select";
+import { getSession } from "./onnx-inference";
 import type { Observation, Candidate, UnderstandingOutput, UnderstandingStage } from "./types";
 import { generateObservationId } from "./types";
 import { logger } from "../observability";
@@ -144,14 +150,20 @@ export function buildDeviceString(output: UnderstandingOutput): string {
   return parts.length > 0 ? parts.join(" ") : "Unknown appliance";
 }
 
+interface ResolvedFrame {
+  asset_id: string;
+  url: string;
+  lowQuality: boolean;
+}
+
 async function resolveVideoFrames(
   caseId: string,
   assets: AssetRow[],
-): Promise<{ asset_id: string; url: string }[]> {
+): Promise<ResolvedFrame[]> {
   const videoAssets = assets.filter((a) => a.asset_type === "video");
   if (videoAssets.length === 0) return [];
 
-  const results: { asset_id: string; url: string }[] = [];
+  const results: ResolvedFrame[] = [];
 
   for (const va of videoAssets) {
     try {
@@ -187,7 +199,7 @@ async function resolveVideoFrames(
       for (const frame of selected) {
         const publicUrl = await getPublicUrl(frame.storagePath);
         if (publicUrl) {
-          results.push({ asset_id: va.asset_id, url: publicUrl });
+          results.push({ asset_id: va.asset_id, url: publicUrl, lowQuality: frame.lowQuality });
         }
       }
 
@@ -316,6 +328,9 @@ export async function runUnderstandingPipeline(
 
   // Resolve video frames from preprocessed frame extractions
   const videoFrameAssets = await resolveVideoFrames(caseId, dedupedAssets);
+  const lowQualityAssetUrls = new Set(
+    videoFrameAssets.filter((vf) => vf.lowQuality).map((vf) => vf.url),
+  );
   imageAssets.push(...videoFrameAssets.map((vf) => ({ asset_id: vf.asset_id, url: vf.url })));
   imageUrls.push(...videoFrameAssets.map((vf) => vf.url));
 
@@ -323,9 +338,30 @@ export async function runUnderstandingPipeline(
     await classifyAppliance(caseId, imageUrls, applianceHint);
   allObservations.push(...classifyObs);
 
-  // 2. OCR extraction
+  // 2. Logo detection + OCR (run in parallel)
+  sendProgress(send, "logo_detect");
   sendProgress(send, "ocr");
-  const { observations: ocrObs, ocrResults } = await runOcr(caseId, imageAssets);
+
+  const [logoObs, ocrResult] = await Promise.all([
+    detectLogos(caseId, imageAssets),
+    runOcr(caseId, imageAssets),
+  ]);
+
+  allObservations.push(...logoObs);
+
+  const { observations: ocrObs, ocrResults } = ocrResult;
+
+  // Annotate observations from low-quality video frames
+  if (lowQualityAssetUrls.size > 0) {
+    const lowQualityAssetIds = new Set(
+      videoFrameAssets.filter((vf) => vf.lowQuality).map((vf) => vf.asset_id),
+    );
+    for (const obs of ocrObs) {
+      if (obs.asset_id && lowQualityAssetIds.has(obs.asset_id)) {
+        obs.metadata = { ...obs.metadata, low_quality_frame: true };
+      }
+    }
+  }
   allObservations.push(...ocrObs);
 
   // 3. Entity extraction (brand, model, serial, error codes)
@@ -340,18 +376,36 @@ export async function runUnderstandingPipeline(
   const entityObs = await extractEntities(caseId, ocrResults, userMeta);
   allObservations.push(...entityObs);
 
-  // 4. Symptom NLP
+  // 4. Panel similarity (runs after entity extraction, parallel with symptoms)
+  sendProgress(send, "panel_similarity");
   sendProgress(send, "symptoms");
-  const symptomObs = await extractSymptoms(caseId, symptom);
+
+  const [panelObs, symptomObs] = await Promise.all([
+    matchPanelSimilarity(caseId, imageAssets),
+    extractSymptoms(caseId, symptom),
+  ]);
+
+  allObservations.push(...panelObs);
   allObservations.push(...symptomObs);
 
-  // 5. Fusion
-  sendProgress(send, "fusion");
-  const candidates = fuseObservations(caseId, allObservations);
+  // 5. Audio anomaly detection (from extracted audio tracks)
+  sendProgress(send, "audio");
+  const audioObs = await classifyAudioAnomalies(caseId);
+  allObservations.push(...audioObs);
 
-  // 6. Rank and assemble
+  // 6. Fusion — try learned model, fall back to rule-based
+  sendProgress(send, "fusion");
+  const useLearned = await getSession("fusion_model");
+  const candidates = useLearned
+    ? await learnedFuseObservations(caseId, allObservations)
+    : await fuseObservations(caseId, allObservations);
+
+  // 7. Rank and assemble — try learned model, fall back to heuristic
   sendProgress(send, "rank");
-  const output = rankAndAssemble(caseId, candidates, classifyResult, allObservations);
+  const useLearnedRank = await getSession("ranking_model");
+  const output = useLearnedRank
+    ? await learnedRankAndAssemble(caseId, candidates, classifyResult, allObservations)
+    : rankAndAssemble(caseId, candidates, classifyResult, allObservations);
 
   // Persist to database
   try {

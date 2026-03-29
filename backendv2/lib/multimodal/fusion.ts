@@ -1,5 +1,6 @@
 import type { Observation, Candidate, SourceType } from "./types";
 import { generateCandidateId } from "./types";
+import { calibrate } from "./calibration";
 
 interface GroupedObservations {
   [field: string]: { [value: string]: Observation[] };
@@ -10,6 +11,9 @@ const CONTRADICTION_PENALTY = 0.1;
 
 export const SOURCE_WEIGHT_CATALOG = 1.0;
 export const SOURCE_WEIGHT_GEMINI = 0.85;
+export const SOURCE_WEIGHT_LOGO_DETECTOR = 0.88;
+export const SOURCE_WEIGHT_PANEL_SIMILARITY = 0.82;
+export const SOURCE_WEIGHT_AUDIO_DETECTOR = 0.75;
 export const SOURCE_WEIGHT_TEXT_PARSE = 0.70;
 export const SOURCE_WEIGHT_OCR = 0.65;
 export const SOURCE_WEIGHT_USER_METADATA = 0.50;
@@ -17,9 +21,12 @@ export const SOURCE_WEIGHT_USER_METADATA = 0.50;
 const SOURCE_WEIGHTS: Record<SourceType, number> = {
   catalog_lookup: SOURCE_WEIGHT_CATALOG,
   gemini: SOURCE_WEIGHT_GEMINI,
+  logo_detector: SOURCE_WEIGHT_LOGO_DETECTOR,
+  panel_similarity: SOURCE_WEIGHT_PANEL_SIMILARITY,
   text_parse: SOURCE_WEIGHT_TEXT_PARSE,
   classifier: SOURCE_WEIGHT_GEMINI,
   ocr: SOURCE_WEIGHT_OCR,
+  audio_detector: SOURCE_WEIGHT_AUDIO_DETECTOR,
   user_metadata: SOURCE_WEIGHT_USER_METADATA,
 };
 
@@ -45,22 +52,27 @@ function groupObservations(observations: Observation[]): GroupedObservations {
   return grouped;
 }
 
-function fuseField(
+async function fuseField(
   caseId: string,
   field: string,
   valueGroups: { [value: string]: Observation[] },
-): Candidate[] {
+): Promise<Candidate[]> {
   const values = Object.keys(valueGroups);
   const hasConflict = values.length > 1;
 
   const candidates: Candidate[] = [];
 
   for (const [value, obs] of Object.entries(valueGroups)) {
-    const weightedSum = obs.reduce(
-      (sum, o) => sum + o.confidence * getSourceWeight(o.source_type),
-      0,
-    );
-    const weightTotal = obs.reduce((sum, o) => sum + getSourceWeight(o.source_type), 0);
+    let weightedSum = 0;
+    let weightTotal = 0;
+
+    for (const o of obs) {
+      const calibratedConf = await calibrate(o.source_type, o.field, o.confidence);
+      const w = getSourceWeight(o.source_type);
+      weightedSum += calibratedConf * w;
+      weightTotal += w;
+    }
+
     const baseConfidence = weightTotal > 0 ? weightedSum / weightTotal : 0;
 
     const sourceTypes = new Set(obs.map((o) => o.source_type));
@@ -100,18 +112,18 @@ function fuseField(
 
 /**
  * Fuses all observations into ranked candidates per field.
- * Uses source-type weighted averaging, corroboration boost,
- * region OCR bonus, and contradiction penalty.
+ * Uses calibrated confidence scores, source-type weighted averaging,
+ * corroboration boost, region OCR bonus, and contradiction penalty.
  */
-export function fuseObservations(
+export async function fuseObservations(
   caseId: string,
   observations: Observation[],
-): Candidate[] {
+): Promise<Candidate[]> {
   const grouped = groupObservations(observations);
   const allCandidates: Candidate[] = [];
 
   for (const [field, valueGroups] of Object.entries(grouped)) {
-    const fieldCandidates = fuseField(caseId, field, valueGroups);
+    const fieldCandidates = await fuseField(caseId, field, valueGroups);
     allCandidates.push(...fieldCandidates);
   }
 
