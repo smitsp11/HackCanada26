@@ -24,10 +24,11 @@ const SLOTS: { key: SlotKey; label: string; icon: string }[] = [
   { key: "video", label: "Video", icon: "" },
 ];
 
-export function InputScreen({ setAssets, onExecute, onProductIdentified }: {
+export function InputScreen({ setAssets, onExecute, onProductIdentified, isSubmitting = false }: {
   setAssets: (assets: any[]) => void;
   onExecute: (symptom: string) => void;
   onProductIdentified?: (result: IdentifiedProduct | null) => void;
+  isSubmitting?: boolean;
 }) {
   const [localSymptom, setLocalSymptom] = useState("");
   const [slots, setSlots] = useState<Record<SlotKey, CloudinaryUploadResult | null>>({
@@ -94,7 +95,7 @@ export function InputScreen({ setAssets, onExecute, onProductIdentified }: {
   };
 
   const filledCount = Object.values(slots).filter(Boolean).length;
-  const canExecute = filledCount === 3 && localSymptom.trim().length > 0;
+  const canExecute = filledCount === 3 && localSymptom.trim().length > 0 && !isSubmitting;
 
   return (
     <main className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 flex flex-col items-center">
@@ -218,7 +219,7 @@ export function InputScreen({ setAssets, onExecute, onProductIdentified }: {
                 disabled={!canExecute}
                 className="w-full py-4 bg-black text-white font-mono text-sm font-bold tracking-[0.2em] uppercase border-2 border-black cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed enabled:hover:bg-brand enabled:hover:border-brand transition-colors duration-200"
               >
-                Execute Diagnostic
+                {isSubmitting ? "Creating Case..." : "Execute Diagnostic"}
               </button>
             </div>
           </div>
