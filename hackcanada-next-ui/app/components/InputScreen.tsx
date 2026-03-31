@@ -66,6 +66,27 @@ export function InputScreen({ caseId, onExecute, onProductIdentified, isSubmitti
     setSlots((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
   };
 
+  const runIdentification = useCallback((imageUrl: string, currentCaseId: string) => {
+    setIdentifyStatus("loading");
+    setIdentified(null);
+
+    fetch("/api/identify-product", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageUrl, case_id: currentCaseId }),
+    })
+      .then((res) => res.json())
+      .then((data: IdentifiedProduct) => {
+        setIdentified(data);
+        setIdentifyStatus("done");
+        onProductIdentified?.(data);
+      })
+      .catch(() => {
+        setIdentifyStatus("done");
+        onProductIdentified?.(null);
+      });
+  }, [onProductIdentified]);
+
   const handleFileSelect = useCallback(async (slotKey: SlotKey, file: File) => {
     const previewUrl = URL.createObjectURL(file);
     updateSlot(slotKey, {
@@ -102,28 +123,7 @@ export function InputScreen({ caseId, onExecute, onProductIdentified, isSubmitti
       const message = err instanceof Error ? err.message : "Upload failed";
       updateSlot(slotKey, { uploadStatus: "error", error: message });
     }
-  }, [caseId]);
-
-  const runIdentification = (imageUrl: string, currentCaseId: string) => {
-    setIdentifyStatus("loading");
-    setIdentified(null);
-
-    fetch("/api/identify-product", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imageUrl, case_id: currentCaseId }),
-    })
-      .then((res) => res.json())
-      .then((data: IdentifiedProduct) => {
-        setIdentified(data);
-        setIdentifyStatus("done");
-        onProductIdentified?.(data);
-      })
-      .catch(() => {
-        setIdentifyStatus("done");
-        onProductIdentified?.(null);
-      });
-  };
+  }, [caseId, runIdentification]);
 
   const removeSlot = (slotKey: SlotKey) => {
     const slot = slots[slotKey];
@@ -159,7 +159,7 @@ export function InputScreen({ caseId, onExecute, onProductIdentified, isSubmitti
         <div className="flex flex-col border-2 border-black bg-white shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_var(--color-brand)] transition-shadow duration-300">
           <div className="px-7 pt-4 pb-3 flex items-center justify-between border-b-2 border-black bg-studio">
             <span className="font-mono text-[11px] font-bold tracking-[0.2em] uppercase text-black">
-              // Media Mounting
+              {"// Media Mounting"}
             </span>
             <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-brand font-bold">
               {filledCount} Mounted
@@ -300,7 +300,7 @@ export function InputScreen({ caseId, onExecute, onProductIdentified, isSubmitti
         <div className="flex flex-col border-2 border-black bg-white shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_var(--color-brand)] transition-shadow duration-300">
           <div className="px-7 pt-4 pb-3 border-b-2 border-black bg-studio flex items-center justify-between">
             <span className="font-mono text-[11px] font-bold tracking-[0.2em] uppercase text-black">
-              // Problem Definition
+              {"// Problem Definition"}
             </span>
           </div>
           <div className="flex flex-col p-6 gap-5">

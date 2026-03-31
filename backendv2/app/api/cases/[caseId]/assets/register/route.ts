@@ -76,7 +76,7 @@ export async function POST(
 
     const assetId = `asset_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-    const { uploadUrl, storagePath, expiresAt } = await createSignedUploadUrl(
+    const { uploadUrl, storagePath, expiresAt, uploadMethod, uploadProvider, uploadFields } = await createSignedUploadUrl(
       caseId,
       assetId,
       filename,
@@ -85,8 +85,8 @@ export async function POST(
     await pool.query(
       `INSERT INTO assets
        (asset_id, case_id, asset_type, slot_key, mime_type, size_bytes,
-        original_filename, storage_uri_raw, upload_status, validation_status, processing_status, scan_status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'awaiting_upload', 'pending', 'pending', 'pending')`,
+        original_filename, storage_uri_raw, upload_status, validation_status, processing_status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'awaiting_upload', 'pending', 'pending')`,
       [assetId, caseId, asset_type, slot_key ?? null, mime_type, size_bytes ?? null, filename, storagePath],
     );
 
@@ -111,6 +111,9 @@ export async function POST(
         upload_url: uploadUrl,
         storage_path: storagePath,
         expires_at: expiresAt,
+        upload_method: uploadMethod,
+        upload_provider: uploadProvider,
+        upload_fields: uploadFields ?? null,
       },
       { status: 201 },
     );

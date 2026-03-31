@@ -7,12 +7,16 @@ import { auditLog } from "@/lib/audit";
 import { logger } from "@/lib/observability";
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ caseId: string; assetId: string }> },
 ) {
   try {
     const { caseId, assetId } = await params;
     const ctx = { case_id: caseId, asset_id: assetId };
+    const body = await req.json().catch(() => ({})) as {
+      cloudinary_url?: string;
+      cloudinary_public_id?: string;
+    };
 
     const assetResult = await pool.query(
       `SELECT asset_id, case_id, asset_type, storage_uri_raw, upload_status
@@ -37,7 +41,7 @@ export async function POST(
     }
 
     const storagePath = asset.storage_uri_raw;
-    if (storagePath) {
+    if (storagePath && !storagePath.startsWith("cloudinary://")) {
       const exists = await verifyFileExists(storagePath);
       if (!exists) {
         return NextResponse.json(
@@ -45,12 +49,28 @@ export async function POST(
           { status: 400 },
         );
       }
+    } else if (!storagePath && !body.cloudinary_url) {
+      return NextResponse.json(
+        { error: "Missing cloudinary_url for non-storage upload completion." },
+        { status: 400 },
+      );
     }
 
-    await pool.query(
-      `UPDATE assets SET upload_status = 'uploaded' WHERE asset_id = $1`,
-      [assetId],
-    );
+    if (body.cloudinary_url) {
+      await pool.query(
+        `UPDATE assets
+         SET upload_status = 'uploaded',
+             cloudinary_url = $2,
+             cloudinary_public_id = COALESCE($3, cloudinary_public_id)
+         WHERE asset_id = $1`,
+        [assetId, body.cloudinary_url, body.cloudinary_public_id ?? null],
+      );
+    } else {
+      await pool.query(
+        `UPDATE assets SET upload_status = 'uploaded' WHERE asset_id = $1`,
+        [assetId],
+      );
+    }
 
     // Deduplication: compute checksum early and check for duplicates
     if (storagePath) {
@@ -81,8 +101,7 @@ export async function POST(
                    storage_uri_normalized = $3,
                    storage_uri_thumbnail = $4,
                    validation_status = 'validated',
-                   processing_status = 'ready',
-                   scan_status = 'clean'
+                   processing_status = 'ready'
                WHERE asset_id = $1`,
               [assetId, existingAssetId, storage_uri_normalized, storage_uri_thumbnail],
             );

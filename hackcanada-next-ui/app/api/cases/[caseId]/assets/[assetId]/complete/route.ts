@@ -11,7 +11,7 @@ function getBackendBase() {
 }
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ caseId: string; assetId: string }> },
 ) {
   try {
@@ -19,10 +19,12 @@ export async function POST(
 
     const url = `${getBackendBase()}/api/cases/${caseId}/assets/${assetId}/complete`;
 
+    const contentType = req.headers.get("content-type");
+    const body = await req.arrayBuffer();
     const upstreamRes = await fetch(url, {
       method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({}),
+      headers: contentType ? { "content-type": contentType } : undefined,
+      body,
       cache: "no-store",
     });
 

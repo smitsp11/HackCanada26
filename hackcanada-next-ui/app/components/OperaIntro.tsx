@@ -14,15 +14,14 @@ export function OperaIntro({
 }) {
   const [phase, setPhase] = useState<"typing" | "asset" | "moving" | "done">("typing");
   const [typedLength, setTypedLength] = useState(0);
-  const [showCursor, setShowCursor] = useState(true);
+  const showCursor = phase === "typing" && typedLength < LOGO.length;
 
   // Typewriter
   useEffect(() => {
     if (phase !== "typing") return;
     if (typedLength >= LOGO.length) {
-      setShowCursor(false);
-      setPhase("asset");
-      return;
+      const t = setTimeout(() => setPhase("asset"), 0);
+      return () => clearTimeout(t);
     }
     const t = setTimeout(() => setTypedLength((n) => n + 1), TYPE_DELAY_MS);
     return () => clearTimeout(t);
@@ -98,7 +97,7 @@ export function OperaIntro({
             }}
           >
             {LOGO.slice(0, typedLength)}
-            {showCursor && phase === "typing" && (
+            {showCursor && (
               <span className="inline-block w-0.5 h-[0.9em] bg-black ml-0.5 animate-pulse" />
             )}
           </motion.h1>
