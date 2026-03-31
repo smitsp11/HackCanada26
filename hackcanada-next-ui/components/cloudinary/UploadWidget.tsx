@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback, type ReactNode } from "react";
+import { useEffect, useState, useCallback, type ReactNode } from "react";
 import { cloudName, uploadPreset } from "@/lib/cloudinary-config";
 
 export interface CloudinaryUploadResult {
@@ -80,15 +80,9 @@ export function UploadWidget({
   defaultSource,
   children,
 }: UploadWidgetProps) {
-  const widgetRef = useRef<{ open: () => void } | null>(null);
   const [isScriptReady, setIsScriptReady] = useState(false);
   const [scriptError, setScriptError] = useState(false);
   const hasConfig = cloudName.trim().length > 0;
-
-  const onUploadSuccessRef = useRef(onUploadSuccess);
-  const onUploadErrorRef = useRef(onUploadError);
-  onUploadSuccessRef.current = onUploadSuccess;
-  onUploadErrorRef.current = onUploadError;
 
   useEffect(() => {
     if (!hasConfig) return;
@@ -116,12 +110,6 @@ export function UploadWidget({
       }
     }, 10000);
 
-    if (isWidgetReady()) {
-      if (poll) clearInterval(poll);
-      if (timeout) clearTimeout(timeout);
-      setIsScriptReady(true);
-    }
-
     return () => {
       mounted = false;
       if (poll) clearInterval(poll);
@@ -132,27 +120,25 @@ export function UploadWidget({
   const handleOpen = useCallback(() => {
     if (!isScriptReady || typeof window.cloudinary?.createUploadWidget !== "function") return;
 
-    if (!widgetRef.current) {
-      widgetRef.current = window.cloudinary.createUploadWidget(
-        {
-          ...WIDGET_CONFIG,
-          defaultSource,
-          multiple,
-        },
-        (error: CloudinaryWidgetError | null, result: CloudinaryWidgetResult | null) => {
-          if (error) {
-            onUploadErrorRef.current?.(new Error(error.message || "Upload failed"));
-            return;
-          }
-          if (result && result.event === "success") {
-            onUploadSuccessRef.current?.(result.info);
-          }
-        },
-      );
-    }
+    const widget = window.cloudinary.createUploadWidget(
+      {
+        ...WIDGET_CONFIG,
+        defaultSource,
+        multiple,
+      },
+      (error: CloudinaryWidgetError | null, result: CloudinaryWidgetResult | null) => {
+        if (error) {
+          onUploadError?.(new Error(error.message || "Upload failed"));
+          return;
+        }
+        if (result && result.event === "success") {
+          onUploadSuccess?.(result.info);
+        }
+      },
+    );
 
-    widgetRef.current?.open();
-  }, [isScriptReady, multiple, defaultSource]);
+    widget.open();
+  }, [defaultSource, isScriptReady, multiple, onUploadError, onUploadSuccess]);
 
   if (!hasConfig) {
     return (

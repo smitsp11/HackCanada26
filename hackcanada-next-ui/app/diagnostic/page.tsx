@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import OperaShell from "@/components/opera/OperaShell";
 import { DEMO_ASSET_URLS, DEFAULT_DEMO_SYMPTOM } from "@/lib/demo-assets";
@@ -14,27 +14,15 @@ interface OperaAssets {
 function DiagnosticContent() {
   const searchParams = useSearchParams();
   const caseId = searchParams.get("caseId");
+  const useDemoAssets = !caseId;
+  const assets: OperaAssets | null = caseId
+    ? null
+    : {
+        urls: [...DEMO_ASSET_URLS],
+        symptom: DEFAULT_DEMO_SYMPTOM,
+      };
 
-  const [assets, setAssets] = useState<OperaAssets | null>(null);
-  const [useDemoAssets, setUseDemoAssets] = useState(false);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    if (caseId) {
-      setReady(true);
-      return;
-    }
-
-    // Fallback to demo assets when no caseId
-    setAssets({
-      urls: [...DEMO_ASSET_URLS],
-      symptom: DEFAULT_DEMO_SYMPTOM,
-    });
-    setUseDemoAssets(true);
-    setReady(true);
-  }, [caseId]);
-
-  if (!ready) {
+  if (!caseId && !assets) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p className="font-mono text-sm text-black/50">Loading diagnostic...</p>

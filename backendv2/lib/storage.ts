@@ -1,37 +1,57 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.SUPABASE_URL ?? "";
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const hasSupabaseConfig = Boolean(supabaseUrl && supabaseServiceKey && !supabaseServiceKey.includes("your-service-role-key"));
+const supabase = hasSupabaseConfig ? createClient(supabaseUrl, supabaseServiceKey) : null;
 
 const BUCKET = "raw-uploads";
+
+export type UploadMethod = "PUT" | "POST";
+export type UploadProvider = "supabase" | "cloudinary";
+export interface SignedUploadResult {
+  uploadUrl: string;
+  storagePath: string | null;
+  expiresAt: string;
+  uploadMethod: UploadMethod;
+  uploadProvider: UploadProvider;
+  uploadFields?: Record<string, string>;
+}
 
 export async function createSignedUploadUrl(
   caseId: string,
   assetId: string,
   filename: string,
-): Promise<{ uploadUrl: string; storagePath: string; expiresAt: string }> {
+): Promise<SignedUploadResult> {
   const storagePath = `raw/${caseId}/${assetId}/${filename}`;
-
-  const { data, error } = await supabase.storage
-    .from(BUCKET)
-    .createSignedUploadUrl(storagePath);
-
-  if (error || !data) {
-    throw new Error(`Failed to create signed upload URL: ${error?.message}`);
-  }
-
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-  return {
-    uploadUrl: data.signedUrl,
-    storagePath,
-    expiresAt,
-  };
+  // Prefer Supabase signed uploads when configured.
+  if (supabase) {
+    const { data, error } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUploadUrl(storagePath);
+
+    if (!error && data) {
+      return {
+        uploadUrl: data.signedUrl,
+        storagePath,
+        expiresAt,
+        uploadMethod: "PUT",
+        uploadProvider: "supabase",
+      };
+    }
+  }
+
+  // Cloudinary fallback intentionally disabled for now.
+  throw new Error(
+    "Supabase signed upload unavailable: set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
+  );
 }
 
 export async function verifyFileExists(storagePath: string): Promise<boolean> {
+  if (!supabase) return false;
   const { data, error } = await supabase.storage
     .from(BUCKET)
     .list(storagePath.substring(0, storagePath.lastIndexOf("/")), {
@@ -45,6 +65,9 @@ export async function verifyFileExists(storagePath: string): Promise<boolean> {
 export async function downloadFile(
   storagePath: string,
 ): Promise<Buffer> {
+  if (!supabase) {
+    throw new Error("Supabase storage not configured for file download.");
+  }
   const { data, error } = await supabase.storage
     .from(BUCKET)
     .download(storagePath);
@@ -62,6 +85,9 @@ export async function uploadDerived(
   buffer: Buffer,
   contentType: string,
 ): Promise<string> {
+  if (!supabase) {
+    throw new Error("Supabase storage not configured for derived uploads.");
+  }
   const { error } = await supabase.storage
     .from(BUCKET)
     .upload(storagePath, buffer, {
@@ -77,11 +103,15 @@ export async function uploadDerived(
 }
 
 export async function deleteFile(storagePath: string): Promise<boolean> {
+  if (!supabase) return false;
   const { error } = await supabase.storage.from(BUCKET).remove([storagePath]);
   return !error;
 }
 
 export async function getPublicUrl(storagePath: string): Promise<string> {
+  if (!supabase) {
+    throw new Error("Supabase storage not configured for public URLs.");
+  }
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(storagePath);
   return data.publicUrl;
 }
@@ -91,6 +121,7 @@ export async function getPublicUrl(storagePath: string): Promise<string> {
  * Returns the full storage path for each file.
  */
 export async function listFiles(prefix: string): Promise<string[]> {
+  if (!supabase) return [];
   const dirPath = prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
   const folder = dirPath.substring(0, dirPath.lastIndexOf("/"));
   const search = dirPath.substring(dirPath.lastIndexOf("/") + 1);

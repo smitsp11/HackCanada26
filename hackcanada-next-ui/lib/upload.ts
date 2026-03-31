@@ -1,8 +1,11 @@
 export interface RegisteredAsset {
   asset_id: string;
   upload_url: string;
-  storage_path: string;
+  storage_path: string | null;
   expires_at: string;
+  upload_method?: "PUT" | "POST";
+  upload_provider?: "supabase" | "cloudinary";
+  upload_fields?: Record<string, string> | null;
 }
 
 export async function registerAsset(
@@ -33,13 +36,37 @@ export async function registerAsset(
 }
 
 export async function uploadToSignedUrl(
-  uploadUrl: string,
+  registered: RegisteredAsset,
   file: File,
   onProgress?: (percent: number) => void,
-): Promise<void> {
+): Promise<{ cloudinaryUrl?: string; cloudinaryPublicId?: string }> {
+  const method = registered.upload_method ?? "PUT";
+  if (method === "POST") {
+    const form = new FormData();
+    for (const [key, value] of Object.entries(registered.upload_fields ?? {})) {
+      form.append(key, value);
+    }
+    form.append("file", file);
+    const res = await fetch(registered.upload_url, {
+      method: "POST",
+      body: form,
+    });
+    if (!res.ok) {
+      throw new Error(`Upload failed with status ${res.status}`);
+    }
+    const payload = await res.json().catch(() => ({}));
+    onProgress?.(100);
+    return {
+      cloudinaryUrl:
+        typeof payload.secure_url === "string" ? payload.secure_url : undefined,
+      cloudinaryPublicId:
+        typeof payload.public_id === "string" ? payload.public_id : undefined,
+    };
+  }
+
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("PUT", uploadUrl);
+    xhr.open("PUT", registered.upload_url);
     xhr.setRequestHeader("Content-Type", file.type);
 
     xhr.upload.addEventListener("progress", (e) => {
@@ -50,7 +77,7 @@ export async function uploadToSignedUrl(
 
     xhr.addEventListener("load", () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve();
+        resolve({});
       } else {
         reject(new Error(`Upload failed with status ${xhr.status}`));
       }
@@ -66,10 +93,15 @@ export async function uploadToSignedUrl(
 export async function completeAsset(
   caseId: string,
   assetId: string,
+  uploadMeta?: { cloudinaryUrl?: string; cloudinaryPublicId?: string },
 ): Promise<{ asset_id: string; status: string }> {
   const res = await fetch(`/api/cases/${caseId}/assets/${assetId}/complete`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      cloudinary_url: uploadMeta?.cloudinaryUrl,
+      cloudinary_public_id: uploadMeta?.cloudinaryPublicId,
+    }),
   });
 
   if (!res.ok) {
@@ -82,7 +114,7 @@ export async function completeAsset(
 
 export interface UploadResult {
   assetId: string;
-  storagePath: string;
+  storagePath: string | null;
 }
 
 export async function uploadAsset(
@@ -94,10 +126,10 @@ export async function uploadAsset(
   const registered = await registerAsset(caseId, file, slotKey);
 
   onProgress?.(0);
-  await uploadToSignedUrl(registered.upload_url, file, onProgress);
+  const uploadMeta = await uploadToSignedUrl(registered, file, onProgress);
   onProgress?.(100);
 
-  await completeAsset(caseId, registered.asset_id);
+  await completeAsset(caseId, registered.asset_id, uploadMeta);
 
   return {
     assetId: registered.asset_id,

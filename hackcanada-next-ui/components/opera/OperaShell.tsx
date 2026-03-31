@@ -37,7 +37,8 @@ export default function OperaShell({ caseId, assetUrls, symptom, makeModel, useD
     if (started.current) return;
     started.current = true;
     dispatch({ type: "UPLOAD_COMPLETE" });
-    setSSEEnabled(true);
+    const t = setTimeout(() => setSSEEnabled(true), 0);
+    return () => clearTimeout(t);
   }, [dispatch]);
 
   useEffect(() => {

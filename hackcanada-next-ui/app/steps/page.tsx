@@ -33,20 +33,22 @@ function toMockStep(s: RepairStep): MockStep {
 
 export default function StepsPage() {
   const router = useRouter();
-  const [data, setData] = useState<OperaStepsData | null>(null);
+  const [data] = useState<OperaStepsData | null>(() => {
+    if (typeof window === "undefined") return null;
+    const raw = sessionStorage.getItem("opera-steps");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as OperaStepsData;
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("opera-steps");
-    if (!raw) {
-      router.replace("/");
-      return;
-    }
-    try {
-      setData(JSON.parse(raw));
-    } catch {
+    if (!data) {
       router.replace("/");
     }
-  }, [router]);
+  }, [data, router]);
 
   if (!data) {
     return (

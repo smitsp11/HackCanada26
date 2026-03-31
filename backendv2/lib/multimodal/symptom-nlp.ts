@@ -213,10 +213,10 @@ const KEYWORD_MAP: Record<string, string[]> = {
   slow_recovery: ["slow recovery", "takes forever to heat", "slow to heat"],
   tank_leaking: ["tank leak", "tank dripping", "water under heater"],
   disposal_jammed: ["disposal jammed", "disposal stuck", "garbage disposal jam"],
-  disposal_won't_turn: ["disposal won't turn", "disposal dead"],
-  burner_won't_ignite: ["burner won't light", "won't ignite", "no flame", "burner won't start"],
+  "disposal_won't_turn": ["disposal won't turn", "disposal dead"],
+  "burner_won't_ignite": ["burner won't light", "won't ignite", "no flame", "burner won't start"],
   uneven_heating: ["uneven heating", "hot spots", "cold spots", "heats unevenly"],
-  oven_won't_preheat: ["oven won't preheat", "oven not heating"],
+  "oven_won't_preheat": ["oven won't preheat", "oven not heating"],
   self_clean_malfunction: ["self clean", "self-clean not working"],
 };
 
