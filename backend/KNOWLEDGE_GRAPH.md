@@ -119,16 +119,6 @@ delivery and full replays are the same operation.
 - **Backfill.** A one-off script replays every existing case through the same
   projector.
 
-## The one product change required
-
-We need to know whether a repair worked. That means a feedback prompt after
-the result screen, plus a follow-up nudge a few days later. Outcomes are
-`worked`, `did_not_work`, or `unknown`. A weak signal can supplement it: no
-new case on the same appliance within 30 days.
-
-This is the only piece that touches the user-facing product. Everything else
-is backend.
-
 ## Example query: prior-based diagnosis
 
 ```cypher
@@ -166,17 +156,7 @@ query shapes stabilize.
   source of citations.
 - PII stays in Postgres. The graph holds `user_id` only.
 
-## Rollout
-
-1. **Week 1.** Populate `cases.user_id`. Add the outcome feedback prompt.
-   Define the `Solution` distillation from instruct output.
-2. **Week 2.** Projector and backfill. Neo4j Aura instance. Read-only queries
-   exposed internally.
-3. **Week 3.** Inject priors into the diagnose prompt behind a feature flag.
-   Measure diagnose latency, token cost, and cause-ranking accuracy against
-   the current baseline using the existing eval harness.
-
-## What success looks like
+## Benefits of adding a knowledge graph
 
 - Diagnose cost and latency drop on appliances with history, because retrieval
   can be narrowed to the pages prior solutions cite.
