@@ -1,7 +1,5 @@
 # Proposal: A Repair Knowledge Graph for Opera AI
 
-**Status:** idea, not started. Estimated first version: 2 to 3 weeks for one engineer.
-
 ## The problem
 
 Every case today is an island. We store the case, the photos, and each pipeline
