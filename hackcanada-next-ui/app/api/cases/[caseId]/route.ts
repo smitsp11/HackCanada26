@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { backendAuthHeaders } from "@/lib/backend-auth";
 
 const DEFAULT_BACKEND = "https://hack-canada26.vercel.app";
 
@@ -18,7 +19,10 @@ export async function GET(
     const { caseId } = await params;
     const url = `${getBackendBase()}/api/cases/${caseId}`;
 
-    const upstreamRes = await fetch(url, { cache: "no-store" });
+    const upstreamRes = await fetch(url, {
+      cache: "no-store",
+      headers: backendAuthHeaders(),
+    });
     const bodyText = await upstreamRes.text();
     const ct = upstreamRes.headers.get("content-type") || "";
 

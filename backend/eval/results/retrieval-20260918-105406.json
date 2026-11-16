@@ -1,0 +1,450 @@
+{
+  "summary": {
+    "hit@3": 0.875,
+    "recall@3": 0.677,
+    "hit@5": 0.938,
+    "recall@5": 0.729,
+    "hit@8": 0.938,
+    "recall@8": 0.792,
+    "mrr": 0.661,
+    "retrieval_ms_p50": 410.9
+  },
+  "cases": [
+    {
+      "id": "code-33-limit",
+      "retrieved": [
+        71,
+        54,
+        62,
+        52,
+        5,
+        55,
+        57,
+        24
+      ],
+      "expected": [
+        54,
+        61
+      ],
+      "code_pages": [
+        71,
+        54
+      ],
+      "ms": 560.9,
+      "hit@3": 1.0,
+      "recall@3": 0.5,
+      "hit@5": 1.0,
+      "recall@5": 0.5,
+      "hit@8": 1.0,
+      "recall@8": 0.5,
+      "mrr": 0.5
+    },
+    {
+      "id": "code-13-limit-lockout",
+      "retrieved": [
+        71,
+        54,
+        62,
+        68,
+        52,
+        6,
+        24,
+        5
+      ],
+      "expected": [
+        54,
+        61
+      ],
+      "code_pages": [
+        71,
+        54
+      ],
+      "ms": 368.1,
+      "hit@3": 1.0,
+      "recall@3": 0.5,
+      "hit@5": 1.0,
+      "recall@5": 0.5,
+      "hit@8": 1.0,
+      "recall@8": 0.5,
+      "mrr": 0.5
+    },
+    {
+      "id": "code-34-ignition",
+      "retrieved": [
+        72,
+        54,
+        66,
+        68,
+        69,
+        5,
+        6,
+        62
+      ],
+      "expected": [
+        54,
+        65,
+        69
+      ],
+      "code_pages": [
+        72,
+        54
+      ],
+      "ms": 392.5,
+      "hit@3": 1.0,
+      "recall@3": 0.3333333333333333,
+      "hit@5": 1.0,
+      "recall@5": 0.6666666666666666,
+      "hit@8": 1.0,
+      "recall@8": 0.6666666666666666,
+      "mrr": 0.5
+    },
+    {
+      "id": "code-14-ignition-lockout",
+      "retrieved": [
+        71,
+        54,
+        62,
+        52,
+        24,
+        55,
+        5,
+        6
+      ],
+      "expected": [
+        54,
+        69
+      ],
+      "code_pages": [
+        71,
+        54
+      ],
+      "ms": 400.2,
+      "hit@3": 1.0,
+      "recall@3": 0.5,
+      "hit@5": 1.0,
+      "recall@5": 0.5,
+      "hit@8": 1.0,
+      "recall@8": 0.5,
+      "mrr": 0.5
+    },
+    {
+      "id": "code-31-pressure-switch",
+      "retrieved": [
+        71,
+        54,
+        62,
+        69,
+        55,
+        68,
+        66,
+        5
+      ],
+      "expected": [
+        54,
+        66
+      ],
+      "code_pages": [
+        71,
+        54,
+        62
+      ],
+      "ms": 423.8,
+      "hit@3": 1.0,
+      "recall@3": 0.5,
+      "hit@5": 1.0,
+      "recall@5": 0.5,
+      "hit@8": 1.0,
+      "recall@8": 1.0,
+      "mrr": 0.5
+    },
+    {
+      "id": "code-24-fuse",
+      "retrieved": [
+        72,
+        54,
+        62,
+        52,
+        68,
+        55,
+        69,
+        53
+      ],
+      "expected": [
+        54,
+        62
+      ],
+      "code_pages": [
+        72,
+        54,
+        62
+      ],
+      "ms": 463.6,
+      "hit@3": 1.0,
+      "recall@3": 1.0,
+      "hit@5": 1.0,
+      "recall@5": 1.0,
+      "hit@8": 1.0,
+      "recall@8": 1.0,
+      "mrr": 0.5
+    },
+    {
+      "id": "code-10-polarity",
+      "retrieved": [
+        71,
+        54,
+        55,
+        62,
+        52,
+        69,
+        5,
+        25
+      ],
+      "expected": [
+        26,
+        62
+      ],
+      "code_pages": [
+        71,
+        54,
+        55
+      ],
+      "ms": 492.7,
+      "hit@3": 0.0,
+      "recall@3": 0.0,
+      "hit@5": 1.0,
+      "recall@5": 0.5,
+      "hit@8": 1.0,
+      "recall@8": 0.5,
+      "mrr": 0.25
+    },
+    {
+      "id": "filter-airflow",
+      "retrieved": [
+        19,
+        67,
+        63,
+        68,
+        24,
+        21,
+        5,
+        8
+      ],
+      "expected": [
+        63
+      ],
+      "code_pages": [],
+      "ms": 489.2,
+      "hit@3": 1.0,
+      "recall@3": 1.0,
+      "hit@5": 1.0,
+      "recall@5": 1.0,
+      "hit@8": 1.0,
+      "recall@8": 1.0,
+      "mrr": 0.3333333333333333
+    },
+    {
+      "id": "flame-sensor",
+      "retrieved": [
+        65,
+        69,
+        66,
+        5,
+        57,
+        68,
+        58,
+        24
+      ],
+      "expected": [
+        65,
+        69
+      ],
+      "code_pages": [],
+      "ms": 406.7,
+      "hit@3": 1.0,
+      "recall@3": 1.0,
+      "hit@5": 1.0,
+      "recall@5": 1.0,
+      "hit@8": 1.0,
+      "recall@8": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "id": "condensate-leak",
+      "retrieved": [
+        24,
+        5,
+        22,
+        17,
+        23,
+        57,
+        18,
+        8
+      ],
+      "expected": [
+        66,
+        67
+      ],
+      "code_pages": [],
+      "ms": 399.7,
+      "hit@3": 0.0,
+      "recall@3": 0.0,
+      "hit@5": 0.0,
+      "recall@5": 0.0,
+      "hit@8": 0.0,
+      "recall@8": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "id": "igniter-no-glow",
+      "retrieved": [
+        66,
+        69,
+        68,
+        24,
+        67,
+        57,
+        61,
+        5
+      ],
+      "expected": [
+        66
+      ],
+      "code_pages": [],
+      "ms": 410.9,
+      "hit@3": 1.0,
+      "recall@3": 1.0,
+      "hit@5": 1.0,
+      "recall@5": 1.0,
+      "hit@8": 1.0,
+      "recall@8": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "id": "blower-rattle",
+      "retrieved": [
+        64,
+        69,
+        61,
+        5,
+        24,
+        8,
+        65,
+        23
+      ],
+      "expected": [
+        64,
+        65
+      ],
+      "code_pages": [],
+      "ms": 348.9,
+      "hit@3": 1.0,
+      "recall@3": 0.5,
+      "hit@5": 1.0,
+      "recall@5": 0.5,
+      "hit@8": 1.0,
+      "recall@8": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "id": "stored-fault-codes",
+      "retrieved": [
+        62,
+        24,
+        53,
+        6,
+        69,
+        55,
+        57,
+        52
+      ],
+      "expected": [
+        62
+      ],
+      "code_pages": [],
+      "ms": 406.1,
+      "hit@3": 1.0,
+      "recall@3": 1.0,
+      "hit@5": 1.0,
+      "recall@5": 1.0,
+      "hit@8": 1.0,
+      "recall@8": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "id": "flame-rollout",
+      "retrieved": [
+        65,
+        55,
+        66,
+        61,
+        24,
+        22,
+        57,
+        5
+      ],
+      "expected": [
+        55,
+        65
+      ],
+      "code_pages": [],
+      "ms": 449.3,
+      "hit@3": 1.0,
+      "recall@3": 1.0,
+      "hit@5": 1.0,
+      "recall@5": 1.0,
+      "hit@8": 1.0,
+      "recall@8": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "id": "temp-rise",
+      "retrieved": [
+        61,
+        5,
+        24,
+        57,
+        73,
+        58,
+        68,
+        69
+      ],
+      "expected": [
+        61
+      ],
+      "code_pages": [],
+      "ms": 407.3,
+      "hit@3": 1.0,
+      "recall@3": 1.0,
+      "hit@5": 1.0,
+      "recall@5": 1.0,
+      "hit@8": 1.0,
+      "recall@8": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "id": "component-test",
+      "retrieved": [
+        55,
+        69,
+        66,
+        61,
+        65,
+        68,
+        54,
+        64
+      ],
+      "expected": [
+        55
+      ],
+      "code_pages": [],
+      "ms": 1590.9,
+      "hit@3": 1.0,
+      "recall@3": 1.0,
+      "hit@5": 1.0,
+      "recall@5": 1.0,
+      "hit@8": 1.0,
+      "recall@8": 1.0,
+      "mrr": 1.0
+    }
+  ]
+}

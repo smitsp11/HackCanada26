@@ -1,0 +1,110 @@
+{
+  "case_id": "case_73142d0637bc4fcbb273d534172d7724",
+  "identity": {
+    "brand": null,
+    "model_number": null,
+    "unit_number": null,
+    "model_normalized": "",
+    "serial": null,
+    "appliance_type": null,
+    "confidence": 0.0,
+    "identity_level": "type_only",
+    "manual_id": null,
+    "catalog_matched": false,
+    "user_confirmed": false,
+    "notes": null
+  },
+  "summary": {
+    "symptom_restated": "Water is pooling on the floor underneath the furnace.",
+    "causes": [
+      {
+        "summary": "The condensate drain line or trap is likely clogged, causing water produced during the heating cycle to back up and overflow.",
+        "detail": "High-efficiency furnaces produce water (condensate) as a byproduct of combustion. This water is collected and drained away through a tube or pipe. Over time, the drain line or an internal trap can become clogged with sediment or biological growth. This blockage causes water to back up and spill into the furnace cabinet and onto the floor. The water stains and light rust visible in the bottom of the furnace cabinet are consistent with this type of leak.",
+        "confidence": 0.7,
+        "manual_pages": [],
+        "evidence": [],
+        "error_codes": [],
+        "components": [
+          "Condensate Drain Line",
+          "Condensate Trap",
+          "Collector Box"
+        ],
+        "verified": null
+      },
+      {
+        "summary": "If the air conditioner is running, its drain line may be clogged, causing water to overflow from the evaporator coil drain pan.",
+        "detail": "During cooling operation, the evaporator coil (A-coil), typically located above the furnace, removes humidity from the air. This water collects in a drain pan and flows out a separate drain line. If this line is clogged, the pan will overflow, and water will often run down through the furnace cabinet to the floor. This is a very common cause of water leaks, but it only occurs when the A/C is in use.",
+        "confidence": 0.5,
+        "manual_pages": [],
+        "evidence": [],
+        "error_codes": [],
+        "components": [
+          "Evaporator Coil Drain Pan",
+          "Evaporator Coil Drain Line"
+        ],
+        "verified": null
+      },
+      {
+        "summary": "If the furnace uses a condensate pump to remove water, the pump may have failed or its outlet may be blocked.",
+        "detail": "Some installations require a pump to move condensate to a suitable drain, especially in basements. The pump can fail due to a bad motor, a stuck float switch, or a blockage in its discharge tube. When it fails, its reservoir will overflow onto the floor. A condensate pump would typically be a small plastic box on the floor next to the furnace with tubes connected to it.",
+        "confidence": 0.4,
+        "manual_pages": [],
+        "evidence": [],
+        "error_codes": [],
+        "components": [
+          "Condensate Pump"
+        ],
+        "verified": null
+      },
+      {
+        "summary": "A component that handles condensate, such as the collector box or secondary heat exchanger, may be cracked.",
+        "detail": "Less commonly, a plastic or metal component within the furnace that is part of the condensate system could be cracked or corroded, allowing water to leak. This can be caused by age, stress, or freezing. The hot surface ignitor visible in the photo is cracked, which, while unrelated to the leak, may suggest the furnace is older or has deferred maintenance, increasing the likelihood of other component failures.",
+        "confidence": 0.2,
+        "manual_pages": [],
+        "evidence": [],
+        "error_codes": [],
+        "components": [
+          "Collector Box",
+          "Secondary Heat Exchanger"
+        ],
+        "verified": null
+      }
+    ],
+    "safety": {
+      "verdict": "technician",
+      "hazards": [],
+      "reasons": [
+        "The appliance could not be identified, so its hazards are unknown. Treat this as professional work until the model is confirmed."
+      ],
+      "manual_scope_note": null,
+      "manual_pages": []
+    },
+    "abstained": false,
+    "abstain_reason": "",
+    "clarifying_questions": [
+      "Is the leak happening when you are running the heater or the air conditioner?",
+      "Can you trace the plastic tubing (usually clear or white PVC) that comes out of the side or bottom of the furnace? Does it lead to a floor drain or to a small box (a condensate pump) on the floor?",
+      "Is there any water dripping from the top section of the furnace cabinet, where the ductwork connects?"
+    ],
+    "requested_photos": [
+      "A photo of the entire furnace and the area around it, showing any drain lines or pumps.",
+      "A photo of the area above the furnace burners, to see if there is an A/C evaporator coil or humidifier installed inside the ductwork."
+    ],
+    "grounded": false
+  },
+  "meta": {
+    "duration_sec": 33.4,
+    "cost_usd": 0.0348
+  },
+  "_persisted": {
+    "status": "ready",
+    "manual_id": null,
+    "cause_count": 4,
+    "stages": [
+      "identify",
+      "diagnose"
+    ]
+  },
+  "_case_id": "case_73142d0637bc4fcbb273d534172d7724",
+  "_elapsed_sec": 34.1
+}

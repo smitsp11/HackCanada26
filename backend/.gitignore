@@ -1,0 +1,17 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+
+# Manual PDFs are large and may be licensed - keep them out of git.
+manuals/*.pdf
+fixtures/*.jpg
+fixtures/*.jpeg
+fixtures/*.png
+fixtures/*.mp4
+.env.local
+.env.*
+!.env.example

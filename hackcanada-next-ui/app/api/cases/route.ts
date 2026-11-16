@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { backendAuthHeaders } from "@/lib/backend-auth";
 
 const DEFAULT_BACKEND = "https://hack-canada26.vercel.app";
 
@@ -19,7 +20,10 @@ export async function POST(req: NextRequest) {
 
     const upstreamRes = await fetch(url, {
       method: "POST",
-      headers: contentType ? { "content-type": contentType } : undefined,
+      headers: {
+        ...(contentType ? { "content-type": contentType } : {}),
+        ...backendAuthHeaders(),
+      },
       body,
       cache: "no-store",
     });

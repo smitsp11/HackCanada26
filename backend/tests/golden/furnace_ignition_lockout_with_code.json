@@ -1,0 +1,173 @@
+{
+  "case_id": "case_7e3be0d96bf14f2384b462c4280be908",
+  "identity": {
+    "brand": "Carrier",
+    "model_number": "59SC6A",
+    "unit_number": "59SC6A060M17--16",
+    "model_normalized": "59SC6A060M1716",
+    "serial": "2417C12345",
+    "appliance_type": "gas furnace",
+    "confidence": 1.0,
+    "identity_level": "exact",
+    "manual_id": "carrier-59sc6a",
+    "catalog_matched": true,
+    "user_confirmed": false,
+    "notes": null
+  },
+  "summary": {
+    "symptom_restated": "The furnace control board is displaying error code 34.1, indicating an ignition proving failure. The heating sequence starts, the inducer motor runs, and the hot surface igniter glows, but the main burners fail to light. After four attempts, the control enters a 14.1 ignition lockout.",
+    "causes": [
+      {
+        "summary": "The gas supply to the furnace may be turned off at a manual valve.",
+        "detail": "The troubleshooting guide for ignition failure suggests checking that all manual gas shut-off valves are open. This includes the external valve on the gas line leading to the furnace and the switch on the gas valve itself. The photo shows the switch on the gas valve is in the 'ON' position, but the external valve's position is unknown. If there is no gas supplied to the valve, it cannot release gas for ignition, leading to an ignition failure code 34.1.",
+        "confidence": 0.9,
+        "manual_pages": [
+          72
+        ],
+        "evidence": [
+          "Check for (applies to all): ... Manual shut-off valve",
+          "Check that all gas valves are turned on."
+        ],
+        "error_codes": [
+          "34.1",
+          "14.1"
+        ],
+        "components": [
+          "Gas valve",
+          "Manual gas shutoff valve"
+        ],
+        "verified": null
+      },
+      {
+        "summary": "The gas valve may be faulty and not opening when energized.",
+        "detail": "The furnace control sends a 24V AC signal to the gas valve to open after the igniter has warmed up. If the valve receives this voltage but fails to open mechanically, gas will not flow to the burners, resulting in an ignition failure (Code 34.1). A technician would verify 24V at the valve; if voltage is present but the valve does not click open, the valve has likely failed.",
+        "confidence": 0.8,
+        "manual_pages": [
+          72,
+          74
+        ],
+        "evidence": [
+          "Does gas valve open and allow gas to flow?",
+          "NO",
+          "Replace valve.",
+          "Gas Control Group... Gas valve"
+        ],
+        "error_codes": [
+          "34.1",
+          "14.1"
+        ],
+        "components": [
+          "Gas valve"
+        ],
+        "verified": null
+      },
+      {
+        "summary": "The furnace control board may not be sending the 24V signal to open the gas valve.",
+        "detail": "After the igniter warm-up period, the control board is responsible for sending a 24V AC signal to the gas valve. If the board fails to send this signal, the gas valve will not open. The troubleshooting flowchart indicates that if 24V is not present at the gas valve during the ignition trial, and the connections are good, the control board should be replaced.",
+        "confidence": 0.6,
+        "manual_pages": [
+          72,
+          74
+        ],
+        "evidence": [
+          "Does gas valve receive 24V?",
+          "NO",
+          "Check connections. If OK, replace control.",
+          "Electrical Group... Circuit board"
+        ],
+        "error_codes": [
+          "34.1",
+          "14.1"
+        ],
+        "components": [
+          "Circuit board"
+        ],
+        "verified": null
+      },
+      {
+        "summary": "The inlet gas pressure to the furnace is too low for proper ignition.",
+        "detail": "The furnace requires a minimum inlet gas pressure to operate correctly. The manual specifies that for natural gas, the pressure must not fall below 4.5 inches W.C. during operation. If the pressure is below this level, the gas valve may open, but the gas flow will be insufficient to establish a stable flame, causing an ignition failure.",
+        "confidence": 0.5,
+        "manual_pages": [
+          24,
+          58,
+          72
+        ],
+        "evidence": [
+          "Minimum Gas Pressure... Natural (in W.C.)... 4.5\"",
+          "The inlet gas pressure must be checked with the furnace operating in maximum heat. This is necessary to make sure the inlet gas pressure does not fall below the minimum pressure of 4.5 in. w.c.",
+          "Check for (applies to all): Low inlet gas pressure"
+        ],
+        "error_codes": [
+          "34.1",
+          "14.1"
+        ],
+        "components": [],
+        "verified": null
+      },
+      {
+        "summary": "The main burner orifices may be blocked with debris, preventing gas flow.",
+        "detail": "Debris, such as rust or spider webs, can obstruct the small orifices in the gas manifold. This prevents gas from flowing into the burners to be ignited by the hot surface igniter. The maintenance section advises inspecting the orifices for blockages. This would prevent ignition even if the gas valve opens correctly.",
+        "confidence": 0.3,
+        "manual_pages": [
+          65,
+          72,
+          74
+        ],
+        "evidence": [
+          "Inspect the orifices in the manifold assembly for blockages or obstructions. Remove orifice and clean or replace orifice.",
+          "Check for: ... Blocked or incorrect carry-over gap",
+          "Gas Control Group... Orifice"
+        ],
+        "error_codes": [
+          "34.1",
+          "14.1"
+        ],
+        "components": [
+          "Orifice",
+          "Manifold"
+        ],
+        "verified": null
+      }
+    ],
+    "safety": {
+      "verdict": "technician",
+      "hazards": [
+        "gas",
+        "high_voltage",
+        "combustion_venting"
+      ],
+      "reasons": [
+        "Gas-fired appliance: fuel connections, burners and the gas valve are not homeowner-serviceable.",
+        "Combustion venting: incorrect work here can vent carbon monoxide into the living space."
+      ],
+      "manual_scope_note": "Only trained and qualified personnel should install, repair, or service heating equipment. Untrained personnel can perform basic maintenance functions such as cleaning and replacing air filters. All other operations must be performed by trained service personnel.",
+      "manual_pages": [
+        4
+      ]
+    },
+    "abstained": false,
+    "abstain_reason": null,
+    "clarifying_questions": [
+      "When the furnace tries to light, can you hear a distinct 'click' from the gas valve area a few seconds after the igniter starts to glow?",
+      "Is the manual gas shut-off valve on the pipe leading to the furnace in the 'ON' position (handle parallel to the pipe)?"
+    ],
+    "requested_photos": [],
+    "grounded": true
+  },
+  "meta": {
+    "duration_sec": 88.1,
+    "cost_usd": 0.078
+  },
+  "_persisted": {
+    "status": "ready",
+    "manual_id": "carrier-59sc6a",
+    "cause_count": 5,
+    "stages": [
+      "identify",
+      "diagnose"
+    ]
+  },
+  "_case_id": "case_7e3be0d96bf14f2384b462c4280be908",
+  "_elapsed_sec": 88.7
+}

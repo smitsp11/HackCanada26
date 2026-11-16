@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { backendAuthHeaders } from "@/lib/backend-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -36,12 +37,12 @@ export async function GET(
   { params }: { params: Promise<{ caseId: string }> },
 ) {
   const { caseId } = await params;
-  const url = `${getBackendBase()}/api/cases/${caseId}/events`;
+  const url = `${getBackendBase()}/api/cases/${caseId}/ui-events`;
 
   try {
     const upstreamRes = await fetch(url, {
       cache: "no-store",
-      headers: { Accept: "text/event-stream" },
+      headers: { Accept: "text/event-stream", ...backendAuthHeaders() },
     });
 
     if (!upstreamRes.ok || !upstreamRes.body) {

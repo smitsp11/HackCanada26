@@ -34,11 +34,15 @@ export default function OperaShell({ caseId, assetUrls, symptom, makeModel, useD
   });
 
   useEffect(() => {
-    if (started.current) return;
-    started.current = true;
-    dispatch({ type: "UPLOAD_COMPLETE" });
-    const t = setTimeout(() => setSSEEnabled(true), 0);
-    return () => clearTimeout(t);
+    if (!started.current) {
+      started.current = true;
+      dispatch({ type: "UPLOAD_COMPLETE" });
+    }
+    // Enable on every mount, outside the ref guard. StrictMode mounts twice in
+    // dev: a deferred enable cancelled by the first cleanup is never
+    // rescheduled, because the ref makes the second mount return early - and
+    // the stream silently never opens.
+    setSSEEnabled(true);
   }, [dispatch]);
 
   useEffect(() => {

@@ -1,0 +1,435 @@
+{
+  "summary": {
+    "n": 16,
+    "latency_s_p50": 84.85,
+    "latency_s_p90": 111.0,
+    "latency_s_mean": 85.62,
+    "prompt_tokens_mean": 19379.5,
+    "completion_tokens_mean": 4487.5,
+    "cost_mean": 0.069,
+    "cost_total": 1.1056,
+    "cite_hit": 0.938,
+    "top_cite_hit": 0.75,
+    "abstain_rate": 0.0,
+    "concurrency": 4
+  },
+  "cases": [
+    {
+      "id": "code-33-limit",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 111.96,
+      "diagnose_s": 111.96,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19386,
+      "completion_tokens": 6136,
+      "cost": 0.0855925,
+      "cited": [
+        19,
+        54,
+        55,
+        57,
+        59,
+        61,
+        63,
+        64,
+        67,
+        71,
+        74
+      ],
+      "expected": [
+        54,
+        61
+      ],
+      "cite_hit": 1.0,
+      "top_cite_hit": 1.0,
+      "abstained": 0.0,
+      "top_cause": "Restricted airflow from a dirty air filter or blocked ductwork is causing the furnace to overheat and trip the main limit switch."
+    },
+    {
+      "id": "code-13-limit-lockout",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 77.28,
+      "diagnose_s": 77.28,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19380,
+      "completion_tokens": 3701,
+      "cost": 0.061235,
+      "cited": [
+        71
+      ],
+      "expected": [
+        54,
+        61
+      ],
+      "cite_hit": 0.0,
+      "top_cite_hit": 0.0,
+      "abstained": 0.0,
+      "top_cause": "Restricted airflow due to a dirty air filter or blocked ductwork is causing the furnace to overheat and trip the main limit switch."
+    },
+    {
+      "id": "code-34-ignition",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 97.79,
+      "diagnose_s": 97.79,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19392,
+      "completion_tokens": 5103,
+      "cost": 0.07527,
+      "cited": [
+        58,
+        65,
+        68,
+        69,
+        72
+      ],
+      "expected": [
+        54,
+        65,
+        69
+      ],
+      "cite_hit": 1.0,
+      "top_cite_hit": 1.0,
+      "abstained": 0.0,
+      "top_cause": "The gas supply to the furnace is shut off or inadequate."
+    },
+    {
+      "id": "code-14-ignition-lockout",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 111.0,
+      "diagnose_s": 111.0,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19382,
+      "completion_tokens": 6263,
+      "cost": 0.0868575,
+      "cited": [
+        58,
+        65,
+        66,
+        69,
+        71,
+        72
+      ],
+      "expected": [
+        54,
+        69
+      ],
+      "cite_hit": 1.0,
+      "top_cite_hit": 0.0,
+      "abstained": 0.0,
+      "top_cause": "The furnace is not receiving an adequate supply of gas to ignite."
+    },
+    {
+      "id": "code-31-pressure-switch",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 88.67,
+      "diagnose_s": 88.67,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19386,
+      "completion_tokens": 4918,
+      "cost": 0.0734125,
+      "cited": [
+        13,
+        36,
+        61,
+        66,
+        71
+      ],
+      "expected": [
+        54,
+        66
+      ],
+      "cite_hit": 1.0,
+      "top_cite_hit": 0.0,
+      "abstained": 0.0,
+      "top_cause": "The vent or combustion air intake pipes are blocked, preventing the secondary pressure switch from closing."
+    },
+    {
+      "id": "code-24-fuse",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 74.49,
+      "diagnose_s": 74.49,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19382,
+      "completion_tokens": 3656,
+      "cost": 0.0607875,
+      "cited": [
+        27,
+        54,
+        56,
+        62,
+        72
+      ],
+      "expected": [
+        54,
+        62
+      ],
+      "cite_hit": 1.0,
+      "top_cite_hit": 1.0,
+      "abstained": 0.0,
+      "top_cause": "The control board is indicating a 'Fuse Fault' (code 24), which means the 3-amp fuse that protects the 24-volt control circuit is blown."
+    },
+    {
+      "id": "code-10-polarity",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 69.66,
+      "diagnose_s": 69.66,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19388,
+      "completion_tokens": 3520,
+      "cost": 0.059435,
+      "cited": [
+        26,
+        54,
+        55,
+        62,
+        71
+      ],
+      "expected": [
+        26,
+        62
+      ],
+      "cite_hit": 1.0,
+      "top_cite_hit": 1.0,
+      "abstained": 0.0,
+      "top_cause": "The incoming 115V power supply has reversed polarity."
+    },
+    {
+      "id": "filter-airflow",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 70.66,
+      "diagnose_s": 70.66,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19382,
+      "completion_tokens": 3751,
+      "cost": 0.0617375,
+      "cited": [
+        19,
+        53,
+        61,
+        63,
+        64,
+        71
+      ],
+      "expected": [
+        63
+      ],
+      "cite_hit": 1.0,
+      "top_cite_hit": 1.0,
+      "abstained": 0.0,
+      "top_cause": "The air filter is likely dirty or clogged, which is the most common cause of reduced airflow and can lead to the furnace overheating."
+    },
+    {
+      "id": "flame-sensor",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 99.57,
+      "diagnose_s": 99.57,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19375,
+      "completion_tokens": 5935,
+      "cost": 0.08356875,
+      "cited": [
+        58,
+        62,
+        65,
+        68,
+        69,
+        72
+      ],
+      "expected": [
+        65,
+        69
+      ],
+      "cite_hit": 1.0,
+      "top_cite_hit": 1.0,
+      "abstained": 0.0,
+      "top_cause": "The flame sensor is likely dirty or faulty, preventing the furnace control from detecting the flame."
+    },
+    {
+      "id": "condensate-leak",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 84.85,
+      "diagnose_s": 84.85,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19369,
+      "completion_tokens": 4970,
+      "cost": 0.07391125,
+      "cited": [
+        13,
+        14,
+        16,
+        18,
+        66,
+        67,
+        68,
+        71,
+        74
+      ],
+      "expected": [
+        66,
+        67
+      ],
+      "cite_hit": 1.0,
+      "top_cite_hit": 1.0,
+      "abstained": 0.0,
+      "top_cause": "The condensate drain line or trap is blocked."
+    },
+    {
+      "id": "igniter-no-glow",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 86.88,
+      "diagnose_s": 86.88,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19372,
+      "completion_tokens": 4311,
+      "cost": 0.067325,
+      "cited": [
+        66,
+        68,
+        69,
+        71,
+        72
+      ],
+      "expected": [
+        66
+      ],
+      "cite_hit": 1.0,
+      "top_cite_hit": 0.0,
+      "abstained": 0.0,
+      "top_cause": "The pressure switch is not closing, or the control board is not sensing that it has closed. This is a safety step required before the igniter can be powered."
+    },
+    {
+      "id": "blower-rattle",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 76.55,
+      "diagnose_s": 76.55,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19369,
+      "completion_tokens": 4003,
+      "cost": 0.06424125,
+      "cited": [
+        63,
+        64
+      ],
+      "expected": [
+        64,
+        65
+      ],
+      "cite_hit": 1.0,
+      "top_cite_hit": 1.0,
+      "abstained": 0.0,
+      "top_cause": "The setscrew securing the blower wheel to the motor shaft may be loose, causing the wheel to rattle and vibrate."
+    },
+    {
+      "id": "stored-fault-codes",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 62.09,
+      "diagnose_s": 62.09,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19375,
+      "completion_tokens": 2392,
+      "cost": 0.04813875,
+      "cited": [
+        52,
+        53,
+        62,
+        63
+      ],
+      "expected": [
+        62
+      ],
+      "cite_hit": 1.0,
+      "top_cite_hit": 1.0,
+      "abstained": 0.0,
+      "top_cause": "The furnace control board stores the last 7 fault codes, which can be accessed using the onboard display and pushbuttons located on the control board inside the blower compartment."
+    },
+    {
+      "id": "flame-rollout",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 100.45,
+      "diagnose_s": 100.45,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19379,
+      "completion_tokens": 5428,
+      "cost": 0.07850375,
+      "cited": [
+        9,
+        46,
+        55,
+        57,
+        67,
+        71
+      ],
+      "expected": [
+        55,
+        65
+      ],
+      "cite_hit": 1.0,
+      "top_cite_hit": 1.0,
+      "abstained": 0.0,
+      "top_cause": "The venting system is blocked, restricted, or improperly installed."
+    },
+    {
+      "id": "temp-rise",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 84.37,
+      "diagnose_s": 84.37,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19376,
+      "completion_tokens": 4674,
+      "cost": 0.07096,
+      "cited": [
+        19,
+        53,
+        57,
+        58,
+        61,
+        64,
+        71
+      ],
+      "expected": [
+        61
+      ],
+      "cite_hit": 1.0,
+      "top_cite_hit": 1.0,
+      "abstained": 0.0,
+      "top_cause": "Restricted airflow due to a dirty air filter or blocked/undersized ductwork is causing the furnace to overheat."
+    },
+    {
+      "id": "component-test",
+      "pages_sent": null,
+      "retrieved": null,
+      "latency_s": 73.58,
+      "diagnose_s": 73.58,
+      "retrieval_ms": 0.0,
+      "prompt_tokens": 19379,
+      "completion_tokens": 3039,
+      "cost": 0.05461375,
+      "cited": [
+        54,
+        55
+      ],
+      "expected": [
+        55
+      ],
+      "cite_hit": 1.0,
+      "top_cite_hit": 1.0,
+      "abstained": 0.0,
+      "top_cause": "The furnace has a built-in component self-test that can be initiated from the control board to check the inducer motor, hot surface igniter, and blower motor."
+    }
+  ]
+}

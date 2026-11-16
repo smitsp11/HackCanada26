@@ -1,0 +1,119 @@
+{
+  "manual": "manuals/opera-manual.pdf (Carrier 59SC6A, 74 pages)",
+  "labeling_rule": "expected_pages = the pages a technician must see to answer. A case counts as a hit if ANY of them is retrieved/cited. Keep lists short (1-3) or hit@k becomes meaningless.",
+  "status": "DRAFT - labels need human review",
+  "cases": [
+    {
+      "id": "code-33-limit",
+      "symptom": "Furnace fires up, runs a few minutes, then the burners shut off. The display shows 33.",
+      "error_code": "33",
+      "expected_pages": [54, 61],
+      "note": "p54 status code table (33 = main limit circuit open); p61 'Check Main Limit Switch'."
+    },
+    {
+      "id": "code-13-limit-lockout",
+      "symptom": "Furnace is locked out and won't heat. Status shows 13.",
+      "error_code": "13",
+      "expected_pages": [54, 61],
+      "note": "p54: 13 = limit lockout, switch open >3 min."
+    },
+    {
+      "id": "code-34-ignition",
+      "symptom": "No heat. I can hear the inducer fan and see the igniter glow orange but the burners never light. Code 34.",
+      "error_code": "34",
+      "expected_pages": [54, 65, 69],
+      "note": "p54: 34 = ignition fault; p65 burners/flame sensor cleaning; p69 trial-for-ignition / flame proving sequence."
+    },
+    {
+      "id": "code-14-ignition-lockout",
+      "symptom": "Furnace tried to light several times and then just stopped trying. Display reads 14.",
+      "error_code": "14",
+      "expected_pages": [54, 69],
+      "note": "p54: 14 = ignition lockout after 4 tries; p69 explains lockout reset (3 hours or power interrupt)."
+    },
+    {
+      "id": "code-31-pressure-switch",
+      "symptom": "Inducer motor starts but nothing else happens and it never ignites. Code 31 on the board.",
+      "error_code": "31",
+      "expected_pages": [54, 66],
+      "note": "p54: 31 = main pressure switch open; p66 flushing collector box / drainage (blocked drain is the usual cause). REVIEW: add p68 if you think sequence of op matters."
+    },
+    {
+      "id": "code-24-fuse",
+      "symptom": "Furnace is completely dead, no heat and no fan. The display shows 24.",
+      "error_code": "24",
+      "expected_pages": [54, 62],
+      "note": "p54: 24 = fuse fault; p62 says code 24.1 when the fuse needs replacing."
+    },
+    {
+      "id": "code-10-polarity",
+      "symptom": "Control light is flashing rapidly and the furnace will not operate at all. It says 10.1.",
+      "error_code": "10.1",
+      "expected_pages": [26, 62],
+      "note": "p26 & p62: status 10.1 / rapid flash = L1 polarity / power wiring problem. REVIEW."
+    },
+    {
+      "id": "filter-airflow",
+      "symptom": "Very weak airflow out of the vents and the house takes forever to heat. How often should the filter be cleaned or replaced?",
+      "error_code": null,
+      "expected_pages": [63],
+      "note": "p63 'Cleaning and/or Replacing Air Filter'."
+    },
+    {
+      "id": "flame-sensor",
+      "symptom": "Burners light for two or three seconds and then go out, and it keeps repeating.",
+      "error_code": null,
+      "expected_pages": [65, 69],
+      "note": "Classic dirty flame sensor. p65 'Cleaning Burners and Flame Sensor'; p69 2-sec flame proving period."
+    },
+    {
+      "id": "condensate-leak",
+      "symptom": "There's water pooling on the floor under the furnace.",
+      "error_code": null,
+      "expected_pages": [66, 67],
+      "note": "p66 flushing collector box and drainage; p67 cleaning condensate drain and trap."
+    },
+    {
+      "id": "igniter-no-glow",
+      "symptom": "Calling for heat, the inducer runs but the igniter never glows.",
+      "error_code": null,
+      "expected_pages": [66],
+      "note": "p66 'Servicing Hot Surface Igniter'. REVIEW: add p69 (igniter warm-up)?"
+    },
+    {
+      "id": "blower-rattle",
+      "symptom": "Loud rattling and vibration from the blower when the fan runs.",
+      "error_code": null,
+      "expected_pages": [64, 65],
+      "note": "p64 'Blower Motor and Wheel Maintenance'; p65 blower wheel set-screw figure."
+    },
+    {
+      "id": "stored-fault-codes",
+      "symptom": "The problem comes and goes. How do I see the fault codes the furnace has recorded?",
+      "error_code": null,
+      "expected_pages": [62],
+      "note": "p62 'Retrieving Stored Fault Codes'. p54 (Flt menu: last 7 faults) also acceptable."
+    },
+    {
+      "id": "flame-rollout",
+      "symptom": "Furnace shut down and I was told a rollout switch tripped. There's a reset button near the burners.",
+      "error_code": null,
+      "expected_pages": [55, 65],
+      "note": "p55: manual reset limit switch in burner box for flame rollout; p65 figure shows flame rollout switch location."
+    },
+    {
+      "id": "temp-rise",
+      "symptom": "The furnace seems to overheat and cycles on and off quickly. What should the temperature rise be?",
+      "error_code": null,
+      "expected_pages": [61],
+      "note": "p61 'Adjust Temperature Rise'. REVIEW."
+    },
+    {
+      "id": "component-test",
+      "symptom": "How do I run the built-in component self test to check the inducer, igniter and blower?",
+      "error_code": null,
+      "expected_pages": [55],
+      "note": "p55 'To Begin Component Self-Test' and Table 22 Test Sequence."
+    }
+  ]
+}

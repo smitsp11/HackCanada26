@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Opera AI: frontend
 
-## Getting Started
-
-First, run the development server:
+Next.js 16 / React 19 UI for Opera AI. See the [project README](../README.md)
+for the overall system.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`.env.local`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+BACKEND_URL=http://localhost:8000
+BACKEND_API_TOKEN=<same value as the backend's API_BEARER_TOKEN>
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The token has no `NEXT_PUBLIC_` prefix, so it never reaches the browser.
 
-## Learn More
+## How it talks to the backend
 
-To learn more about Next.js, take a look at the following resources:
+The browser only calls this app's own `/api/cases/*` routes. Those routes proxy
+to FastAPI and attach the bearer token on the server side. Photos and video
+are the one exception: they go straight from the browser to S3 via presigned
+PUT URLs, so large files never pass through either server.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The results screen is driven by a single SSE stream,
+`/api/cases/{id}/events`, which proxies to the backend's `/ui-events`. The
+reducer in [hooks/useOperaReducer.ts](hooks/useOperaReducer.ts) moves through
+three phases:
+1. ingestion;
+2. analysis;
+3. synthesis.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Path | |
+|---|---|
+| `app/page.tsx`, `app/components/InputScreen.tsx` | Upload slots (nameplate, interior, video) and the symptom field |
+| `app/diagnostic/page.tsx`, `components/opera/` | The three-phase diagnostic view and the result pane |
+| `app/api/cases/` | Server-side proxy routes to the backend |
+| `hooks/useSSE.ts`, `lib/events.ts` | Event stream client and event types |
+| `lib/upload.ts` | The register → PUT → complete upload flow |
